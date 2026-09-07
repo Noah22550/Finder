@@ -8,12 +8,12 @@ l'adresse du serveur
 [X] GET /health -> 200, {"ok":true}
 [ ] Kit chargé une seule fois au démarrage -> readFileSync hors des
 routes
-[ ] GET /hotels -> 200, tableau de 3 hôtels
-[ ] GET /hotels/:id -> 200 la fiche, ou 404 avec
+[X] GET /hotels -> 200, tableau de 3 hôtels
+[X] GET /hotels/:id -> 200 la fiche, ou 404 avec
 corps JSON
-[ ] GET /chambres -> 200, tableau de 32
+[X] GET /chambres -> 200, tableau de 32
 chambres
-[ ] GET /chambres/:id -> 200 la fiche, ou 404 avec
+[X] GET /chambres/:id -> 200 la fiche, ou 404 avec
 corps JSON
 [ ] req.params.id converti avec Number() -> /hotels/1 répond 200,
 /hotels/abc répond 404
@@ -62,7 +62,7 @@ La commande `npm` (comme `npm install` ou `npm run`) nécessite la présence d'u
 **Solution :**
 Naviguer vers le dossier exact qui contient le fichier `package.json` du projet.
 ```bash
-cd Finder\Finder\api
+cd Finder\Finder pi
 ```
 
 ## Problème 2 : Erreur `Missing script: "dev"`
@@ -147,3 +147,64 @@ const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`API écoute sur http://localhost:${PORT}`);
 });
+```
+
+---
+
+# Le fonctionnement de server.js
+
+## 1. Sécurité et Environnement (`.env` et `.gitignore`)
+
+Imaginez cette API comme le fonctionnement d'un **restaurant**. L'API est le serveur en salle qui fait le lien entre les clients (les navigateurs ou applications qui posent des questions) et la cuisine (vos données JSON).
+
+## 1. L'Équipement (Lignes 1-4)
+Avant d'ouvrir, on s'équipe avec les bons outils :
+* `dotenv` : Ouvre le coffre-fort (le fichier `.env`) qui contient les données secrètes (mots de passe, ports).
+* `fs` et `path` : Les yeux du serveur, qui lui permettent de lire les fichiers cachés dans les dossiers de la cuisine.
+* `express` : Le costume du serveur. C'est le programme qui va tout gérer.
+
+## 2. La Préparation en Cuisine (Lignes 6-7)
+
+```javascript
+const hotels = JSON.parse(readFileSync(...));
+```
+
+Avant l'arrivée des clients, le serveur lit les menus (`hotels.json` et `chambres.json`). L'action `JSON.parse` lui permet de mémoriser toute la carte dans sa tête. Ainsi, quand un client posera une question, il répondra instantanément sans retourner fouiller dans la réserve.
+
+## 3. L'Accueil (Lignes 9-10)
+
+```javascript
+const app = express();
+app.use(express.json());
+```
+
+On enfile le costume (`app = express()`) et on s'assure de parler la même langue que les clients : le format de données JSON.
+
+## 4. Les Commandes Simples (Lignes 12-13)
+
+```javascript
+app.get('/hotels', (req, res) => res.json(hotels));
+```
+
+Si un client demande "Quelle est la carte des hôtels ?" (l'adresse `/hotels`), le serveur lui donne immédiatement toute la liste qu'il avait mémorisée à l'étape 2.
+
+## 5. Les Commandes Spécifiques (Lignes 15-25)
+
+```javascript
+app.get('/hotels/:id', ...)
+```
+
+Ici, le client demande un élément très précis (ex: l'hôtel n°1 avec `/hotels/1`). 
+1. **La prise de commande :** On lit le numéro demandé dans l'adresse URL (`req.params.id`).
+2. **La recherche :** Le serveur cherche ce numéro exact dans sa tête (`.find`).
+3. **Le service (La condition ternaire) :** 
+   * S'il le trouve `?` Il l'apporte au client.
+   * S'il ne le trouve pas `:` Il s'excuse avec une erreur 404 "Introuvable".
+
+## 6. L'Ouverture du Restaurant (Lignes 27-29)
+
+```javascript
+app.listen(...)
+```
+
+On allume l'enseigne lumineuse. L'application se met sur écoute (sur le port 3000) et attend patiemment l'arrivée des prochaines requêtes.
