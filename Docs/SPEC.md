@@ -15,7 +15,7 @@ corps JSON
 chambres
 [X] GET /chambres/:id -> 200 la fiche, ou 404 avec
 corps JSON
-[ ] req.params.id converti avec Number() -> /hotels/1 répond 200,
+[X] req.params.id converti avec Number() -> /hotels/1 répond 200,
 /hotels/abc répond 404
 [ ] .env avec PORT et DATABASE_URL -> le fichier existe, il
 n'est pas commité
