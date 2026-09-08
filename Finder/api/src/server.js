@@ -19,6 +19,16 @@ app.get('/chambres/:id', (req, res)=> {const id = Number(req.params.id);
         });
     res.json(chambre);
 })
+app.get('/chambres/:prix_nuit', (req, res)=> {const prix = req.query.prix_nuit;
+                                              const chambre = chambres.find(c => c.prix_nuit <= prix);
+    if(!chambre) return res.status(404).json(
+        {
+            erreur:"prix introuvable"
+        });
+    res.json(chambre);
+
+})
+
 
 app.get('/hotels', (req, res) => res.json(hotels));
 app.get('/hotels/:id', (req, res) => {
