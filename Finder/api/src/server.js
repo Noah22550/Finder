@@ -9,26 +9,24 @@ const chambres = JSON.parse(readFileSync(path.join(__dirname, '..', 'finder-data
 
 const app = express();
 app.use(express.json());
-
-app.get('/chambres', (req, res) => res.json(chambres));
-app.get('/chambres/:id', (req, res)=> {const id = Number(req.params.id);
-                                      const chambre = chambres.find(c => c.id === id);                  
-    if(!chambre) return res.status(404).json(
-        {
-            erreur:"chambre introuvable"
-        });
-    res.json(chambre);
-})
-app.get('/chambres/:prix_nuit', (req, res)=> {const prix = req.query.prix_nuit;
-                                              const chambre = chambres.find(c => c.prix_nuit <= prix);
-    if(!chambre) return res.status(404).json(
+app.get('/chambres', (req, res)=> {const prix = req.query.prix_max;
+                                              const chambre = chambres.filter(c => c.prix_nuit <= prix);
+    if(!prix) return res.status(404).json(
         {
             erreur:"prix introuvable"
         });
     res.json(chambre);
 
 })
+app.get('/chambres/:id', (req, res)=> {const id = Number(req.params.id);
+                                      const chambre = chambres.find(c => c.id === id); 
 
+    if(!chambre) return res.status(404).json(
+        {
+            erreur:"chambre introuvable"
+        });
+    res.json(chambre);
+})
 
 app.get('/hotels', (req, res) => res.json(hotels));
 app.get('/hotels/:id', (req, res) => {

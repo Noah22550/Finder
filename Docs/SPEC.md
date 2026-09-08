@@ -17,7 +17,7 @@ chambres
 corps JSON
 [X] req.params.id converti avec Number() -> /hotels/1 répond 200,
 /hotels/abc répond 404
-[ ] .env avec PORT et DATABASE_URL -> le fichier existe, il
+[X] .env avec PORT et DATABASE_URL -> le fichier existe, il
 n'est pas commité
 [ ] GET /chambres?prix_max=90 -> 200, 12 chambres ; sans
 critère, 32
