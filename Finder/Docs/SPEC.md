@@ -6,7 +6,7 @@ journal.
 [X] npm run dev démarre sans erreur -> le terminal affiche
 l'adresse du serveur
 [X] GET /health -> 200, {"ok":true}
-[ ] Kit chargé une seule fois au démarrage -> readFileSync hors des
+[X] Kit chargé une seule fois au démarrage -> readFileSync hors des
 routes
 [X] GET /hotels -> 200, tableau de 3 hôtels
 [X] GET /hotels/:id -> 200 la fiche, ou 404 avec
