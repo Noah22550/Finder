@@ -1,11 +1,11 @@
-require('dotenv').config();
-const { readFileSync } = require('node:fs');
-const path = require('node:path');
-const express = require('express');
+import 'dotenv/config';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import express from 'express';
 
 
-const hotels = JSON.parse(readFileSync(path.join(__dirname, '..', 'finder-data', 'hotels.json'), 'utf8'));
-const chambres = JSON.parse(readFileSync(path.join(__dirname, '..', 'finder-data', 'chambres.json'), 'utf8'));
+const hotels = JSON.parse(readFileSync(path.join((import.meta.dirname), '..', 'finder-data', 'hotels.json'), 'utf8'));
+const chambres = JSON.parse(readFileSync(path.join((import.meta.dirname), '..', 'finder-data', 'chambres.json'), 'utf8'));
 
 const app = express();
 app.use(express.json());
