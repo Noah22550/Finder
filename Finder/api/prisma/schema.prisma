@@ -1,0 +1,32 @@
+datasource db { 
+  provider = "mysql" 
+  url      = env("DATABASE_URL") 
+} 
+generator client { 
+  provider = "prisma-client-js" 
+} 
+  
+model chambres { 
+  id         Int       @id @default(autoincrement()) 
+  email      String    @unique 
+  nom        String 
+  motDePasse String 
+  emprunts   Emprunt[] 
+} 
+  
+model Livre { 
+  id       Int       @id @default(autoincrement()) 
+  titre    String 
+  annee    Int 
+  emprunts Emprunt[] 
+} 
+  
+model Emprunt { 
+  id          Int      @id @default(autoincrement()) 
+  adherent    Adherent @relation(fields: [adherentId], references: [id]) 
+  adherentId  Int 
+  livre       Livre    @relation(fields: [livreId], references: [id]) 
+  livreId     Int 
+  dateEmprunt DateTime @default(now()) 
+  statut      String   @default("en_cours") 
+} 
