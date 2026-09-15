@@ -19,7 +19,7 @@ corps JSON
 /hotels/abc répond 404
 [X] .env avec PORT et DATABASE_URL -> le fichier existe, il
 n'est pas commité
-[ ] GET /chambres?prix_max=90 -> 200, 12 chambres ; sans
+[X] GET /chambres?prix_max=90 -> 200, 12 chambres ; sans
 critère, 32
 ## Étapes 2 à 8 - déclarées, non franchies
 [ ] E2 Base MySQL via Prisma : schéma, migration, seed du kit -> tables
@@ -208,3 +208,23 @@ app.listen(...)
 ```
 
 On allume l'enseigne lumineuse. L'application se met sur écoute (sur le port 3000) et attend patiemment l'arrivée des prochaines requêtes.
+# Spécifications et Apprentissages Prisma - Projet Hôtel
+
+Ce document recense les règles d'architecture et les solutions aux problèmes rencontrés lors de la modélisation de la base de données avec Prisma.
+
+---
+
+## 1. Architecture et Modélisation (Schéma)
+
+### A. La règle de la Double Déclaration (Relations)
+Dans Prisma, une relation (clé étrangère) s'écrit toujours en deux lignes du côté de la table "enfant" :
+1. **La vraie colonne MySQL :** `hotel_id Int` (Stocke l'ID physique).
+2. **Le champ virtuel Prisma :** `hotel Hotel @relation(...)` (N'existe qu'en JavaScript pour faciliter les requêtes).
+
+### B. Gestion des valeurs optionnelles (Le Paradoxe du Voyageur)
+Certains utilisateurs (les voyageurs) n'ont pas d'hôtel, contrairement aux hôteliers. Si une clé étrangère peut être vide, il faut impérativement rendre **le champ ID ET la relation virtuels optionnels** en ajoutant un `?`.
+
+```prisma
+// Exemple dans le modèle Compte
+hotel    Hotel? @relation(fields: [hotel_Id], references: [id])
+hotel_Id Int?
