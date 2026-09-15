@@ -22,7 +22,7 @@ n'est pas commité
 [X] GET /chambres?prix_max=90 -> 200, 12 chambres ; sans
 critère, 32
 ## Étapes 2 à 8 - déclarées, non franchies
-[ ] E2 Base MySQL via Prisma : schéma, migration, seed du kit -> tables
+[x] E2 Base MySQL via Prisma : schéma, migration, seed du kit -> tables
 visibles dans Adminer
 [ ] E3 Recherche de chambres disponibles -> GET
 /chambres?... filtre
@@ -228,3 +228,78 @@ Certains utilisateurs (les voyageurs) n'ont pas d'hôtel, contrairement aux hôt
 // Exemple dans le modèle Compte
 hotel    Hotel? @relation(fields: [hotel_Id], references: [id])
 hotel_Id Int?
+
+# 🏗️ Documentation Technique : Seed de la Base de Données (API Finder)
+
+**Projet :** API Finder
+**Technologies :** Node.js v24+, Prisma ORM, MySQL, Bcrypt
+**Auteur :** Noah Depagne (BTS SIO SLAM)
+
+Ce document récapitule la logique, les règles, les résolutions d'erreurs et le code final liés à la création du script de peuplement de la base de données (`prisma/seed.js`) à partir de fichiers JSON.
+
+---
+
+## 1. La Règle d'Or : L'Ordre des Clés Étrangères
+
+Une base de données relationnelle (MySQL) impose un respect strict des dépendances (clés étrangères). On ne peut pas créer un enfant avant son parent, ni supprimer un parent s'il a encore des enfants.
+
+*   **Ordre de suppression (Destruction `deleteMany`) :** Des enfants vers les parents.
+    1. `Reservations` (dépendent des chambres et des comptes)
+    2. `Comptes` (dépendent des hôtels)
+    3. `Chambres` (dépendent des hôtels)
+    4. `Hotels` (Indépendants)
+*   **Ordre d'insertion (Construction `createMany`) :** Des parents vers les enfants.
+    *   Inverse strict de la suppression : `Hotels` ➔ `Chambres` ➔ `Comptes` ➔ `Reservations`.
+
+---
+
+## 2. Les Points Techniques Cruciaux (Prisma & JS)
+
+### A. Le Hachage des Mots de Passe (`bcrypt`)
+Il est interdit de stocker des mots de passe en clair. La boucle de hachage étant asynchrone, il faut utiliser `Promise.all` avec un `.map()` pour attendre que tous les mots de passe soient hachés (avec un "coût" de calcul défini à `10`) avant l'insertion en base.
+
+### B. Le Format des Dates
+Prisma refuse les chaînes de caractères brutes (ex: `"2026-10-09"`) pour les champs de type `DateTime`. Il faut convertir la valeur JSON en objet JavaScript natif via `new Date()`.
+
+### C. La Stricte Correspondance des Noms
+Prisma exige une syntaxe identique à celle définie dans le fichier `schema.prisma` :
+*   Modèle avec un **s** (`model Reservations`) = `prisma.reservations` dans le code.
+*   Si la clé étrangère est `hotel_Id` (grand **I**) dans le schéma mais `hotel_id` (petit **i**) dans le JSON, la conversion se fait dans le mapping : `hotel_Id: c.hotel_id`.
+
+---
+
+## 3. L'Historique du Débogage (Erreurs & Solutions)
+
+1.  **Le script ne se lance pas avec `npx prisma db seed` :**
+    *   *Solution :* Utiliser directement l'exécuteur Node.js : `node prisma/seed.js`.
+2.  **`Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'bcrypt'` :**
+    *   *Solution :* Installer la dépendance manquante : `npm install bcrypt`.
+3.  **`Error: ENOENT: no such file or directory, open '...reservation.json'` :**
+    *   *Solution :* Corriger le nom du fichier ciblé : `lire('reservations.json')`.
+4.  **`Environment variable not found: DATABASE_URL` :**
+    *   *Solution :* Utiliser l'argument natif de Node.js v24+ pour charger le fichier env : `node --env-file=.env prisma/seed.js`.
+5.  **`P2021: The table 'reservations' does not exist in the current database` :**
+    *   *Solution :* La base MySQL n'était pas synchronisée avec le nouveau `schema.prisma`.
+6.  **`Cannot drop index... needed in a foreign key constraint` :**
+    *   *Solution :* Forcer la réinitialisation des tables via la méthode "Bulldozer" : `npx prisma db push --force-reset`.
+
+---
+
+## 4. Les Commandes Utiles (Le Workflow Prisma)
+
+À chaque modification du fichier `schema.prisma`, il faut exécuter ces commandes dans l'ordre :
+
+1.  **Mettre à jour le code JavaScript (Prisma Client) :**
+    ```bash
+    npx prisma generate
+    ```
+2.  **Synchroniser MySQL (Méthode Bulldozer pour le dev) :**
+    ```bash
+    npx prisma db push --force-reset
+    ```
+3.  **Exécuter le script de Seed (avec les variables d'environnement) :**
+    ```bash
+    node --env-file=.env prisma/seed.js
+    ```
+
+---
