@@ -8,7 +8,7 @@ generator client {
   
 model Chambres { 
   id  Int @id @default(autoincrement()) 
-  hotel Hotel @relation(fields: [hotel_Id], references: [id])//ne sert que pour prisma
+  hotel Hotels @relation(fields: [hotel_Id], references: [id])//ne sert que pour prisma
   hotel_Id  Int
   numero String
   categorie String
@@ -17,11 +17,11 @@ model Chambres {
   description String
   disponible Boolean
 
-  Reservation Reservation[]
+  Reservation Reservations[]
 
 } 
   
-model Reservation { 
+model Reservations { 
 id       Int       @id @default(autoincrement()) 
 Comptes Comptes @relation(fields: [voyageur_id], references: [id])
 voyageur_id Int
@@ -41,14 +41,14 @@ email String @unique
 mot_de_passe_clair String 
 nom String 
 prenom String
-hotel Hotel? @relation(fields: [hotel_Id], references: [id])//ne sert que pour prisma
+hotel Hotels? @relation(fields: [hotel_Id], references: [id])//ne sert que pour prisma
 hotel_Id  Int?
 telephone String?
 
-Reservation Reservation[]
+Reservation Reservations[]
 }
   
-model Hotel { 
+model Hotels { 
   id          Int      @id @default(autoincrement()) 
   nom       String  
   etoiles    Int 
