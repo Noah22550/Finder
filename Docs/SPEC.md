@@ -212,8 +212,6 @@ On allume l'enseigne lumineuse. L'application se met sur écoute (sur le port 30
 
 Ce document recense les règles d'architecture et les solutions aux problèmes rencontrés lors de la modélisation de la base de données avec Prisma.
 
----
-
 ## 1. Architecture et Modélisation (Schéma)
 
 ### A. La règle de la Double Déclaration (Relations)
@@ -303,3 +301,5 @@ Prisma exige une syntaxe identique à celle définie dans le fichier `schema.pri
     ```
 
 ---
+
+ # node --env-file=.env prisma/seed.js
