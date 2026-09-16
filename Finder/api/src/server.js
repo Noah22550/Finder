@@ -7,8 +7,35 @@ const prisma = new PrismaClient();
 app.use(express.json());
 
 app.get('/chambres', async (req, res) => {
+    // 1. On prépare un filtre vide par défaut
+    const where = {};
+    // 2. Récupération des critères de l'URL
+    const hotelId = req.query.hotel; 
+    const capacite = req.query.capacite;
+    const categorie = req.query.categorie;
+    const prixMax = req.query.prix_max;
+    // 3. Remplissage du filtre condition par condition
+    if (hotelId) {
+        where.hotelId = Number(hotelId);
+    }
+    if (capacite) {
+        // "Au moins" = supérieur ou égal (gte)
+        where.capacite = {gte: Number(capacite)};
+    }
+    if (categorie) {
+        where.categorie = categorie; // Pas de conversion, c'est du texte
+    }
+    if (prixMax) {
+        // "Maximum" = inférieur ou égal (lte)
+         where.prixNuit = {lte: Number(prixMax)};
+        }
+    // 4. Exécution de la requête Prisma
+    const chambres = await prisma.chambres.findMany({
+        where: where,
+        orderBy: { id: 'asc' }
+    });
 
-    res.json(await prisma.chambres.findMany({ orderBy: { id: 'asc' } }));
+    res.json(chambres);
 });
 
 app.get('/chambres/:id', async (req, res) => {
@@ -44,6 +71,7 @@ app.get('/hotels/:id/chambres', async (req,res) =>{
     }
     res.json(chambres);
 });
+
 
 app.listen(3000, () => {
     console.log("Serveur démarré !");

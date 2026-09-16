@@ -24,7 +24,7 @@ critère, 32
 ## Étapes 2 à 8 - déclarées, non franchies
 [x] E2 Base MySQL via Prisma : schéma, migration, seed du kit -> tables
 visibles dans Adminer
-[ ] E3 Recherche de chambres disponibles -> GET
+[X] E3 Recherche de chambres disponibles -> GET
 /chambres?... filtre
 [ ] E4 Inscription, connexion JWT 24 h, écritures protégées -> sans
 jeton 401, mauvais rôle 403
