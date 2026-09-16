@@ -25,7 +25,7 @@ async function main() {
             nom: h.nom,
             etoiles: h.etoiles,
             adresse: h.adresse,
-            code_postal: h.code_postal,
+            codePostal: h.code_postal,
             ville: h.ville,
             telephone: h.telephone,
             email: h.email,
@@ -38,11 +38,11 @@ async function main() {
     await prisma.chambres.createMany({
         data: chambres.map((l) => ({
             id: l.id,
-            hotel_Id: l.hotel_id,
+            hotelId: l.hotel_id,
             numero: l.numero,
             categorie: l.categorie,
             capacite: l.capacite,
-            prix_nuit: l.prix_nuit,
+            prixNuit: l.prix_nuit,
             description:l.description,
             disponible: l.disponible
         })),
@@ -52,11 +52,12 @@ async function main() {
                 id: c.id,
                 role: c.role,
                 email: c.email,
-                mot_de_passe_clair: await bcrypt.hash(c.mot_de_passe_clair, 10),
+                motDePasseClair: await bcrypt.hash(c.mot_de_passe_clair, 10),
                 nom: c.nom,
                 prenom: c.prenom,
-                hotel_Id: c.hotel_id ?? null,
-                telephone: c.telephone ?? null
+                hotelId: c.hotel_id ?? null,
+                telephone: c.telephone ?? null,
+                note: c.note ?? null
 
             }))
     );
@@ -65,13 +66,13 @@ async function main() {
     await prisma.reservations.createMany({
         data: reservations.map((r)=>({
             id: r.id,
-            voyageur_id: r.voyageur_id,
-            chambre_id: r.chambre_id,
-            date_arrivee: new Date(r.date_arrivee),
-            date_depart: new Date(r.date_depart),
-            nb_personnes: r.nb_personnes,
+            voyageurId: r.voyageur_id,
+            chambreId: r.chambre_id,
+            dateArrivee: new Date(r.date_arrivee),
+            dateDepart: new Date(r.date_depart),
+            nbPersonnes: r.nb_personnes,
             statut: r.statut,
-            demande_special: r.demande_special ?? null
+            demandeSpecial: r.demande_special ?? null
         }))
     })
     console.log(`${chambres.length} chambres, ${comptes.length} comptes,

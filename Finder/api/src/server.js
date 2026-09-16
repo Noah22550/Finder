@@ -2,14 +2,17 @@ import 'dotenv/config';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import express from 'express';
-
-
-const hotels = JSON.parse(readFileSync(path.join((import.meta.dirname), '..', 'finder-data', 'hotels.json'), 'utf8'));
-const chambres = JSON.parse(readFileSync(path.join((import.meta.dirname), '..', 'finder-data', 'chambres.json'), 'utf8'));
-
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 const app = express();
+
+export const getChambres = async (req, res) => {
+    const toutesLesChambres = await prisma.chambres.findMany(); 
+    res.json(toutesLesChambres);
+}
+
 app.use(express.json());
-app.get('/chambres', (req, res)=> {   
+app.get('/chambres', async (req, res)=> {   
                                 const prix = Number(req.query.prix_max);
                                 const chambre = chambres.filter(c => c.prix_nuit <= prix);
         if(isNaN(prix)){

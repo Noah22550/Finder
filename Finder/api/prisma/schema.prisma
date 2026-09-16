@@ -8,12 +8,12 @@ generator client {
   
 model Chambres { 
   id  Int @id @default(autoincrement()) 
-  hotel Hotels @relation(fields: [hotel_Id], references: [id])//ne sert que pour prisma
-  hotel_Id  Int
+  hotel Hotels @relation(fields: [hotelId], references: [id])//ne sert que pour prisma
+  hotelId  Int @map("hotel_id")
   numero String
   categorie String
   capacite Int 
-  prix_nuit Int
+  prixNuit Int @map("prix_nuit")
   description String
   disponible Boolean
 
@@ -23,27 +23,28 @@ model Chambres {
   
 model Reservations { 
 id       Int       @id @default(autoincrement()) 
-Comptes Comptes @relation(fields: [voyageur_id], references: [id])
-voyageur_id Int
-Chambres Chambres @relation(fields: [chambre_id], references: [id])
-chambre_id Int
-date_arrivee DateTime @default(now())
-date_depart DateTime @default(now())
-nb_personnes Int
+Comptes Comptes @relation(fields: [voyageurId], references: [id])
+voyageurId Int @map("voyageur_id")
+Chambres Chambres @relation(fields: [chambreId], references: [id])
+chambreId Int @map("chambre_id")
+dateArrivee DateTime @default(now()) @map("date_arrivee")
+dateDepart DateTime @default(now()) @map("date_depart")
+nbPersonnes Int @map("nb_personnes")
 statut String //@default("en_attente")
-demande_special String?
+demandeSpecial String? @map("demande_special")
 } 
 
 model Comptes{
 id Int @id @default(autoincrement())
 role String 
 email String @unique 
-mot_de_passe_clair String 
+motDePasseClair String @map("mot_de_passe_clair")
 nom String 
 prenom String
-hotel Hotels? @relation(fields: [hotel_Id], references: [id])//ne sert que pour prisma
-hotel_Id  Int?
+hotel Hotels? @relation(fields: [hotelId], references: [id])//ne sert que pour prisma
+hotelId  Int? @map("hotel_id")
 telephone String?
+note String?
 
 Reservation Reservations[]
 }
@@ -53,7 +54,7 @@ model Hotels {
   nom       String  
   etoiles    Int 
   adresse   String
-  code_postal String
+  codePostal String @map("code_postal")
   ville String
   telephone String
   email String @unique
@@ -62,4 +63,4 @@ model Hotels {
 
   chambres    Chambres[]
   Comptes Comptes[]
-} 
+}
