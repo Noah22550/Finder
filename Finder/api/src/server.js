@@ -7,13 +7,9 @@ const prisma = new PrismaClient();
 app.use(express.json());
 
 app.get('/chambres', async (req, res) => {
+    const { hotelId, capacite, categorie, prixMax, dateDebut, dateFin } = req.query;
     // 1. On prépare un filtre vide par défaut
     const where = {};
-    // 2. Récupération des critères de l'URL
-    const hotelId = req.query.hotel; 
-    const capacite = req.query.capacite;
-    const categorie = req.query.categorie;
-    const prixMax = req.query.prix_max;
     // 3. Remplissage du filtre condition par condition
     if (hotelId) {
         where.hotelId = Number(hotelId);
@@ -28,6 +24,21 @@ app.get('/chambres', async (req, res) => {
     if (prixMax) {
         // "Maximum" = inférieur ou égal (lte)
          where.prixNuit = {lte: Number(prixMax)};
+        }
+         // On veut les chambres qui n'ont pas de réservation qui chevauche la période demandée
+        if (dateDebut && dateFin) {
+           
+            where.reservations = {
+                none: {
+                    OR: [
+                        {
+                            statut: 'confirmee',
+                            dateDebut: { lte: new Date(dateFin) },
+                            dateFin: { gte: new Date(dateDebut) }
+                        }
+                    ]
+                }
+            }
         }
     // 4. Exécution de la requête Prisma
     const chambres = await prisma.chambres.findMany({
