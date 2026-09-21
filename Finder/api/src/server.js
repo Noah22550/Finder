@@ -7,40 +7,31 @@ const prisma = new PrismaClient();
 app.use(express.json());
 
 app.get('/chambres', async (req, res) => {
-    const { hotelId, capacite, categorie, prixMax, dateDebut, dateFin } = req.query;
-    // 1. On prépare un filtre vide par défaut
+    const { hotel, capacite, categorie, prixMax, date_debut, date_fin } = req.query;
     const where = {};
-    // 3. Remplissage du filtre condition par condition
-    if (hotelId) {
-        where.hotelId = Number(hotelId);
+    // 2. On écrit dans les colonnes exactes attendues par Prisma
+    if (hotel) {
+        where.hotel_Id = Number(hotel); 
     }
     if (capacite) {
-        // "Au moins" = supérieur ou égal (gte)
-        where.capacite = {gte: Number(capacite)};
+        where.capacite = { gte: Number(capacite) };
     }
     if (categorie) {
-        where.categorie = categorie; // Pas de conversion, c'est du texte
+        where.categorie = categorie;
     }
     if (prixMax) {
-        // "Maximum" = inférieur ou égal (lte)
-         where.prixNuit = {lte: Number(prixMax)};
-        }
-         // On veut les chambres qui n'ont pas de réservation qui chevauche la période demandée
-        if (dateDebut && dateFin) {
-           
-            where.reservations = {
-                none: {
-                    OR: [
-                        {
-                            statut: 'confirmee',
-                            dateDebut: { lte: new Date(dateFin) },
-                            dateFin: { gte: new Date(dateDebut) }
-                        }
-                    ]
-                }
+        where.prix_nuit = { lte: Number(prixMax) }; 
+    }
+    // Le filtre des dates
+    if (date_debut && date_fin) {
+        where.Reservation = {
+            none: {
+                statut: 'confirmee',
+                date_arrivee: { lt: new Date(date_fin) },
+                date_depart: { gt: new Date(date_debut) }       
             }
-        }
-    // 4. Exécution de la requête Prisma
+        }   
+    }   
     const chambres = await prisma.chambres.findMany({
         where: where,
         orderBy: { id: 'asc' }
@@ -48,7 +39,6 @@ app.get('/chambres', async (req, res) => {
 
     res.json(chambres);
 });
-
 app.get('/chambres/:id', async (req, res) => {
         const chambre = await prisma.chambres.findUnique({
             where: { id: Number(req.params.id) },
