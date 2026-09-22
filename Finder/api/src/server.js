@@ -127,6 +127,45 @@ app.post('/auth/logout', authentifier, (req, res) => {
     res.status(204).end();
 });
 
+app.post('/chambres', authentifier, async (req, res) => {
+    try {
+        const newChambre = await prisma.chambres.create({
+            data: {...req.body,}
+        });
+        res.status(201).json(newChambre);
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
+
+// Patch //
+app.patch('/chambres', authentifier, async (req, res) => {
+    try {
+        const newChambre = await prisma.chambres.updateMany({
+            where: { id: Number(req.params.id) },
+            data: {...req.body,}
+        });
+        res.status(201).json(newChambre);
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
+
+// DELETE //
+
+app.delete('/chambres', authentifier, async (req, res) => {
+    try {
+        await prisma.chambres.delete({
+            where: { id: Number(req.params.id) }
+        });
+        res.status(204).end();
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
+
+// ecoute //
+
 app.listen(process.env.PORT, () => {
     console.log("Serveur démarré !");
 });
