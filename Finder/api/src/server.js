@@ -1,10 +1,14 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 const prisma = new PrismaClient();
 
 app.use(express.json());
+
+// GET //
 
 app.get('/chambres', async (req, res) => {
     const { hotel, capacite, categorie, prixMax, date_debut, date_fin } = req.query;
@@ -74,6 +78,32 @@ app.get('/hotels/:id/chambres', async (req,res) =>{
 });
 
 
+// POST //
+
+app.post('/auth/register', async(req, res) =>{
+    const { email,motDePasse, nom, prenom, telephone, note} = req.body;
+    const compte = await prisma.comptes.create({
+        data:{email, motDePasse: await bcrypt.hash(motDePasse, 10), nom, prenom, telephone, note, role: 'voyageur'},
+        select: {id: true, email: true, nom: true, prenom: true, telephone: true, note: true }
+    })
+    res.status(201).json(compte)
+}  )
+
+app.post('/auth/login', async (req, res) => {
+    const { email, motDePasse } = req.body;
+    const compte = await prisma.compte.findUnique({ where: { email } });
+    if (!compte || !(await bcrypt.compare(motDePasse, comptes.motDePasse)))
+    {
+        return res.status(401).json({ erreur: 'identifiants invalides' });
+    }
+    const token = jwt.sign({ id: comptes.id, role: comptes.role },
+    process.env.JWT_SECRET, { expiresIn: '24h' });
+    res.json({ token });
+});
+
+
+
 app.listen(3000, () => {
     console.log("Serveur démarré !");
 });
+

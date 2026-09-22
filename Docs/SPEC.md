@@ -1,50 +1,40 @@
 # Spec Finder - Sprint 1 [MINIMAL]
 Équipe : ... Version : v1 du AAAA-MM-JJ (étape 1)
-Règle : relue au début de chaque séance ; chaque amendement est daté dans le
-journal.
+Règle : relue au début de chaque séance ; chaque amendement est daté dans le journal.
+
 ## Étape 1 - en mémoire
-[X] npm run dev démarre sans erreur -> le terminal affiche
-l'adresse du serveur
-[X] GET /health -> 200, {"ok":true}
-[ ] Kit chargé une seule fois au démarrage -> readFileSync hors des
-routes
-[X] GET /hotels -> 200, tableau de 3 hôtels
-[X] GET /hotels/:id -> 200 la fiche, ou 404 avec
-corps JSON
-[X] GET /chambres -> 200, tableau de 32
-chambres
-[X] GET /chambres/:id -> 200 la fiche, ou 404 avec
-corps JSON
-[X] req.params.id converti avec Number() -> /hotels/1 répond 200,
-/hotels/abc répond 404
-[X] .env avec PORT et DATABASE_URL -> le fichier existe, il
-n'est pas commité
-[X] GET /chambres?prix_max=90 -> 200, 12 chambres ; sans
-critère, 32
+[X] `npm run dev` démarre sans erreur -> le terminal affiche l'adresse du serveur
+[X] `GET /health` -> 200, `{"ok":true}`
+[ ] Kit chargé une seule fois au démarrage -> `readFileSync` hors des routes
+[X] `GET /hotels` -> 200, tableau de 3 hôtels
+[X] `GET /hotels/:id` -> 200 la fiche, ou 404 avec corps JSON
+[X] `GET /chambres` -> 200, tableau de 32 chambres
+[X] `GET /chambres/:id` -> 200 la fiche, ou 404 avec corps JSON
+[X] `req.params.id` converti avec `Number()` -> `/hotels/1` répond 200, `/hotels/abc` répond 404
+[X] `.env` avec PORT et DATABASE_URL -> le fichier existe, il n'est pas commité
+[X] `GET /chambres?prix_max=90` -> 200, 12 chambres ; sans critère, 32
+
 ## Étapes 2 à 8 - déclarées, non franchies
-[x] E2 Base MySQL via Prisma : schéma, migration, seed du kit -> tables
-visibles dans Adminer
-[X] E3 Recherche de chambres disponibles -> GET
-/chambres?... filtre
-[ ] E4 Inscription, connexion JWT 24 h, écritures protégées -> sans
-jeton 401, mauvais rôle 403
-[ ] E5 Validation Zod [ACCEPTABLE] -> corps
-invalide 400, jamais 500
-[ ] E6 Réservations et statuts ->
-en_attente, confirmee, refusee, annulee
-[ ] E7 Documentation Swagger de toutes les routes -> /docs
-les affiche toutes
-[ ] E8 Tests et recette -> npm test
-passe, TA-001 à TA-010
+[X] E2 Base MySQL via Prisma : schéma, migration, seed du kit -> tables visibles dans Adminer
+[X] E3 Recherche de chambres disponibles -> `GET /chambres?...` filtre
+[ ] E4 Inscription, connexion JWT 24 h, écritures protégées -> sans jeton 401, mauvais rôle 403
+[ ] E5 Validation Zod [ACCEPTABLE] -> corps invalide 400, jamais 500
+[ ] E6 Réservations et statuts -> `en_attente`, `confirmee`, `refusee`, `annulee`
+[ ] E7 Documentation Swagger de toutes les routes -> `/docs` les affiche toutes
+[ ] E8 Tests et recette -> `npm test` passe, TA-001 à TA-010
+
 ## Gardes
-[~] Aucun secret dans le dépôt : .env est dans .gitignore
+[~] Aucun secret dans le dépôt : `.env` est dans `.gitignore`
 [~] Aucune route ne répond 500 sur un id inconnu ou mal formé
-[~] Toute erreur a un corps JSON de la même forme : { "erreur": "..." }
+[~] Toute erreur a un corps JSON de la même forme : `{ "erreur": "..." }`
+
 ## Non mesurable
-NON MESURABLE Temps de réponse de la recherche : pas de jeu de données
-assez grand pour trancher
+NON MESURABLE Temps de réponse de la recherche : pas de jeu de données assez grand pour trancher
+
 ## Journal
 AAAA-MM-JJ ... création v1, étape 1
+
+---
 
 # Documentation : Résolution des erreurs npm (ENOENT et Missing script)
 
@@ -52,27 +42,21 @@ Ce document résume les problèmes rencontrés lors du lancement d'une API Node.
 
 ## Problème 1 : Erreur `ENOENT` (Fichier introuvable)
 **Message d'erreur :**
-```text
-npm error ENOENT: no such file or directory, open 'C:\Projet\package.json'
-```
+`npm error ENOENT: no such file or directory, open 'C:\Projet\package.json'`
 
 **Cause :**
 La commande `npm` (comme `npm install` ou `npm run`) nécessite la présence d'un fichier `package.json` dans le répertoire courant. L'erreur survient lorsque le terminal est ouvert dans le mauvais dossier (par exemple à la racine `C:\Projet\`), alors que le projet se trouve dans un sous-dossier.
 
 **Solution :**
 Naviguer vers le dossier exact qui contient le fichier `package.json` du projet.
-```bash
-cd Finder\Finder pi
-```
+`cd Finder\api`
 
 ## Problème 2 : Erreur `Missing script: "dev"`
 **Message d'erreur :**
-```text
-npm error Missing script: "dev"
-```
+`npm error Missing script: "dev"`
 
 **Cause :**
-La commande `npm run dev` indique à npm d'exécuter le raccourci nommé `"dev"`. Si ce raccourci n'est pas explicitement défini dans la section `"scripts"` du fichier `package.json`, l'exécution échoue.
+La commande `npm run dev` indique à npm d'exécuter le script nommé `"dev"`. Si ce raccourci n'est pas explicitement défini dans la section `"scripts"` du fichier `package.json`, l'exécution échoue.
 
 **Solution :**
 Ouvrir le fichier `package.json` du projet et ajouter ou modifier la section `"scripts"` pour inclure `"dev"`. 
@@ -91,13 +75,13 @@ Ouvrir le fichier `package.json` du projet et ajouter ou modifier la section `"s
 
 ## Lancement manuel alternatif
 Si le raccourci npm n'est pas configuré, il est toujours possible de lancer directement l'application avec Node.js depuis la racine du projet (`api`), en pointant vers le bon sous-dossier :
-```bash
-node src/server.js
-```
+`node src/server.js`
 
-# Documentation : Configuration de l'API, Variables d'Environnement et Tests avec cURL
+---
 
-Ce document explique comment configurer les variables d'environnement, protéger les fichiers sensibles avec Git, et tester une API Node.js/Express sous Windows.
+# Documentation : Configuration de l'API, Variables d'Environnement et Tests
+
+Ce document explique comment configurer les variables d'environnement, protéger les fichiers sensibles avec Git, et initialiser une API Node.js/Express.
 
 ## 1. Sécurité et Environnement (`.env` et `.gitignore`)
 
@@ -105,9 +89,7 @@ Ce document explique comment configurer les variables d'environnement, protéger
 *   **Emplacement :** Dans le dossier de l'API (ex: `api/.env`).
 *   **Rôle :** Stocker les informations sensibles et spécifiques à l'environnement, comme la chaîne de connexion à la base de données.
 *   **Exemple de contenu :**
-    ```env
-    DATABASE_URL="postgres://utilisateur:motdepasse@localhost:5432/finder"
-    ```
+    `DATABASE_URL="mysql://utilisateur:motdepasse@localhost:3306/finder"`
 
 ### Le fichier `.gitignore`
 *   **Emplacement :** À la racine globale du projet (ex: `Finder/.gitignore`).
@@ -145,161 +127,135 @@ app.get('/health', (req, res) => {
 // 4. Démarrage du serveur
 const PORT = 3000;
 app.listen(PORT, () => {
-    console.log(`API écoute sur http://localhost:${PORT}`);
+    console.log(`API sur écoute sur http://localhost:${PORT}`);
 });
 ```
 
 ---
 
-# Le fonctionnement de server.js
+# Le fonctionnement de `server.js` (Analogie du Restaurant)
 
-## 1. Sécurité et Environnement (`.env` et `.gitignore`)
+Imaginez cette API comme le fonctionnement d'un **restaurant**. L'API est le serveur en salle qui fait le lien entre les clients (les navigateurs ou applications) et la cuisine (vos données/base de données).
 
-Imaginez cette API comme le fonctionnement d'un **restaurant**. L'API est le serveur en salle qui fait le lien entre les clients (les navigateurs ou applications qui posent des questions) et la cuisine (vos données JSON).
-
-## 1. L'Équipement (Lignes 1-4)
+### 1. L'Équipement
 Avant d'ouvrir, on s'équipe avec les bons outils :
-* `dotenv` : Ouvre le coffre-fort (le fichier `.env`) qui contient les données secrètes (mots de passe, ports).
-* `fs` et `path` : Les yeux du serveur, qui lui permettent de lire les fichiers cachés dans les dossiers de la cuisine.
-* `express` : Le costume du serveur. C'est le programme qui va tout gérer.
+*   `dotenv` : Ouvre le coffre-fort (`.env`) qui contient les données secrètes (mots de passe, ports).
+*   `express` : Le costume du serveur. C'est le framework qui va tout gérer.
 
-## 2. La Préparation en Cuisine (Lignes 6-7)
+### 2. La Préparation en Cuisine
+Avant l'arrivée des clients, le serveur se connecte à la base de données via `PrismaClient()`. Ainsi, quand un client posera une question, il saura exactement où aller chercher les informations.
 
-```javascript
-const hotels = JSON.parse(readFileSync(...));
-```
-
-Avant l'arrivée des clients, le serveur lit les menus (`hotels.json` et `chambres.json`). L'action `JSON.parse` lui permet de mémoriser toute la carte dans sa tête. Ainsi, quand un client posera une question, il répondra instantanément sans retourner fouiller dans la réserve.
-
-## 3. L'Accueil (Lignes 9-10)
-
+### 3. L'Accueil
 ```javascript
 const app = express();
 app.use(express.json());
 ```
-
 On enfile le costume (`app = express()`) et on s'assure de parler la même langue que les clients : le format de données JSON.
 
-## 4. Les Commandes Simples (Lignes 12-13)
-
+### 4. Les Commandes Simples
 ```javascript
-app.get('/hotels', (req, res) => res.json(hotels));
+app.get('/hotels', async (req, res) => res.json(await prisma.hotels.findMany()));
 ```
+Si un client demande "Quelle est la carte des hôtels ?" (l'adresse `/hotels`), le serveur va chercher toute la liste en base de données et la lui sert.
 
-Si un client demande "Quelle est la carte des hôtels ?" (l'adresse `/hotels`), le serveur lui donne immédiatement toute la liste qu'il avait mémorisée à l'étape 2.
-
-## 5. Les Commandes Spécifiques (Lignes 15-25)
-
+### 5. Les Commandes Spécifiques (Fiches détaillées)
 ```javascript
-app.get('/hotels/:id', ...)
+app.get('/hotels/:id', async (req, res) => { ... })
 ```
-
 Ici, le client demande un élément très précis (ex: l'hôtel n°1 avec `/hotels/1`). 
-1. **La prise de commande :** On lit le numéro demandé dans l'adresse URL (`req.params.id`).
-2. **La recherche :** Le serveur cherche ce numéro exact dans sa tête (`.find`).
-3. **Le service (La condition ternaire) :** 
-   * S'il le trouve `?` Il l'apporte au client.
-   * S'il ne le trouve pas `:` Il s'excuse avec une erreur 404 "Introuvable".
+1.  **La prise de commande :** On lit le numéro demandé dans l'adresse URL (`req.params.id`).
+2.  **La recherche :** Le serveur cherche ce numéro exact (`findUnique`).
+3.  **Le service :** S'il le trouve, il l'apporte. S'il ne le trouve pas, il s'excuse avec une erreur 404 "Introuvable".
 
-## 6. L'Ouverture du Restaurant (Lignes 27-29)
-
+### 6. L'Ouverture du Restaurant
 ```javascript
-app.listen(...)
+app.listen(3000, () => { console.log("Serveur démarré !"); });
 ```
+On allume l'enseigne lumineuse. L'application se met sur écoute (sur le port 3000) et attend patiemment l'arrivée des requêtes.
 
-On allume l'enseigne lumineuse. L'application se met sur écoute (sur le port 3000) et attend patiemment l'arrivée des prochaines requêtes.
-# Spécifications et Apprentissages Prisma - Projet Hôtel
+---
 
-Ce document recense les règles d'architecture et les solutions aux problèmes rencontrés lors de la modélisation de la base de données avec Prisma.
+# Spécifications et Apprentissages Prisma - Projet Finder
+
+Ce document recense les règles d'architecture, la modélisation et le peuplement de la base de données avec Prisma.
 
 ## 1. Architecture et Modélisation (Schéma)
 
 ### A. La règle de la Double Déclaration (Relations)
-Dans Prisma, une relation (clé étrangère) s'écrit toujours en deux lignes du côté de la table "enfant" :
-1. **La vraie colonne MySQL :** `hotel_id Int` (Stocke l'ID physique).
-2. **Le champ virtuel Prisma :** `hotel Hotel @relation(...)` (N'existe qu'en JavaScript pour faciliter les requêtes).
+Dans Prisma, une relation (clé étrangère) s'écrit toujours sur deux lignes du côté de la table "enfant" :
+1.  **La vraie colonne MySQL :** `hotel_Id Int` (Stocke l'ID physique).
+2.  **Le champ virtuel Prisma :** `hotel Hotels @relation(...)` (N'existe qu'en JavaScript pour faciliter les requêtes croisées).
 
 ### B. Gestion des valeurs optionnelles (Le Paradoxe du Voyageur)
-Certains utilisateurs (les voyageurs) n'ont pas d'hôtel, contrairement aux hôteliers. Si une clé étrangère peut être vide, il faut impérativement rendre **le champ ID ET la relation virtuels optionnels** en ajoutant un `?`.
+Certains utilisateurs (les voyageurs) n'appartiennent à aucun hôtel, contrairement aux hôteliers. Si une clé étrangère peut être vide, il faut impérativement rendre **la colonne ID ET la relation Prisma virtuellement optionnelles** en ajoutant un `?`.
 
 ```prisma
-// Exemple dans le modèle Compte
-hotel    Hotel? @relation(fields: [hotel_Id], references: [id])
+// Exemple dans le modèle Comptes
+hotel    Hotels? @relation(fields: [hotel_Id], references: [id])
 hotel_Id Int?
-
-# 🏗️ Documentation Technique : Seed de la Base de Données (API Finder)
-
-**Projet :** API Finder
-**Technologies :** Node.js v24+, Prisma ORM, MySQL, Bcrypt
-**Auteur :** Noah Depagne (BTS SIO SLAM)
-
-Ce document récapitule la logique, les règles, les résolutions d'erreurs et le code final liés à la création du script de peuplement de la base de données (`prisma/seed.js`) à partir de fichiers JSON.
+```
 
 ---
 
-## 1. La Règle d'Or : L'Ordre des Clés Étrangères
+## 2. Seed de la Base de Données (`prisma/seed.js`)
 
-Une base de données relationnelle (MySQL) impose un respect strict des dépendances (clés étrangères). On ne peut pas créer un enfant avant son parent, ni supprimer un parent s'il a encore des enfants.
+### A. L'Ordre des Clés Étrangères
+Une base de données relationnelle impose un respect strict des dépendances.
+*   **Ordre de suppression (`deleteMany`) :** Des enfants vers les parents (Réservations ➔ Comptes ➔ Chambres ➔ Hôtels).
+*   **Ordre d'insertion (`createMany`) :** Des parents vers les enfants (Inverse strict de la suppression).
 
-*   **Ordre de suppression (Destruction `deleteMany`) :** Des enfants vers les parents.
-    1. `Reservations` (dépendent des chambres et des comptes)
-    2. `Comptes` (dépendent des hôtels)
-    3. `Chambres` (dépendent des hôtels)
-    4. `Hotels` (Indépendants)
-*   **Ordre d'insertion (Construction `createMany`) :** Des parents vers les enfants.
-    *   Inverse strict de la suppression : `Hotels` ➔ `Chambres` ➔ `Comptes` ➔ `Reservations`.
+### B. Les Points Techniques Cruciaux
+*   **Hachage des Mots de Passe (`bcrypt`) :** Obligatoire pour la sécurité. Utiliser `Promise.all` avec un `.map()` pour attendre le hachage asynchrone avant l'insertion en base.
+*   **Format des Dates :** Prisma refuse les chaînes de caractères brutes (ex: `"2026-10-09"`) pour les types `DateTime`. Il faut les convertir via `new Date()`.
+*   **Différence Source vs Schéma :** Lors de l'insertion, les clés de l'objet (à gauche) DOIVENT correspondre au `schema.prisma` (ex: `hotel_Id`), tandis que les valeurs (à droite) proviennent du fichier source (ex: `c.hotel_id`).
 
----
-
-## 2. Les Points Techniques Cruciaux (Prisma & JS)
-
-### A. Le Hachage des Mots de Passe (`bcrypt`)
-Il est interdit de stocker des mots de passe en clair. La boucle de hachage étant asynchrone, il faut utiliser `Promise.all` avec un `.map()` pour attendre que tous les mots de passe soient hachés (avec un "coût" de calcul défini à `10`) avant l'insertion en base.
-
-### B. Le Format des Dates
-Prisma refuse les chaînes de caractères brutes (ex: `"2026-10-09"`) pour les champs de type `DateTime`. Il faut convertir la valeur JSON en objet JavaScript natif via `new Date()`.
-
-### C. La Stricte Correspondance des Noms
-Prisma exige une syntaxe identique à celle définie dans le fichier `schema.prisma` :
-*   Modèle avec un **s** (`model Reservations`) = `prisma.reservations` dans le code.
-*   Si la clé étrangère est `hotel_Id` (grand **I**) dans le schéma mais `hotel_id` (petit **i**) dans le JSON, la conversion se fait dans le mapping : `hotel_Id: c.hotel_id`.
+### C. Le Workflow Prisma (Commandes Utiles)
+À chaque modification du fichier `schema.prisma`, exécuter dans l'ordre :
+1.  Générer le client : `npx prisma generate`
+2.  Synchroniser MySQL (Force) : `npx prisma db push --force-reset`
+3.  Exécuter la Seed : `node --env-file=.env prisma/seed.js`
 
 ---
 
-## 3. L'Historique du Débogage (Erreurs & Solutions)
+# Documentation : Recherche Avancée et Filtres de Dates (Prisma)
 
-1.  **Le script ne se lance pas avec `npx prisma db seed` :**
-    *   *Solution :* Utiliser directement l'exécuteur Node.js : `node prisma/seed.js`.
-2.  **`Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'bcrypt'` :**
-    *   *Solution :* Installer la dépendance manquante : `npm install bcrypt`.
-3.  **`Error: ENOENT: no such file or directory, open '...reservation.json'` :**
-    *   *Solution :* Corriger le nom du fichier ciblé : `lire('reservations.json')`.
-4.  **`Environment variable not found: DATABASE_URL` :**
-    *   *Solution :* Utiliser l'argument natif de Node.js v24+ pour charger le fichier env : `node --env-file=.env prisma/seed.js`.
-5.  **`P2021: The table 'reservations' does not exist in the current database` :**
-    *   *Solution :* La base MySQL n'était pas synchronisée avec le nouveau `schema.prisma`.
-6.  **`Cannot drop index... needed in a foreign key constraint` :**
-    *   *Solution :* Forcer la réinitialisation des tables via la méthode "Bulldozer" : `npx prisma db push --force-reset`.
+Cette section documente la logique algorithmique mise en place sur la route `GET /chambres` pour filtrer les chambres indisponibles lors d'une recherche par dates.
 
----
+## 1. La Frontière entre l'URL et la Base de Données
+Il est crucial de séparer ce que le client demande (l'URL) et ce que Prisma attend (le schéma).
+*   **L'URL (req.query) :** Les variables dépendent du cahier des charges de l'API (ex: `?hotel=1&date_debut=...`). Le serveur récupère ces données via `const { hotel, date_debut } = req.query;`.
+*   **La Base de Données (Prisma) :** Les critères de recherche dans l'objet `where` DOIVENT utiliser la syntaxe stricte du `schema.prisma` (ex: `where.hotel_Id = Number(hotel);`).
 
-## 4. Les Commandes Utiles (Le Workflow Prisma)
+## 2. L'Algorithme de Chevauchement des Dates
+Pour savoir si une chambre est occupée sur la période demandée par le client, on vérifie si les dates se **chevauchent** (overlap).
+La règle mathématique stipule que deux séjours se croisent SI ET SEULEMENT SI :
+1.  Le départ du client précédent est **après** l'arrivée demandée.
+2.  L'arrivée du client précédent est **avant** le départ demandé.
 
-À chaque modification du fichier `schema.prisma`, il faut exécuter ces commandes dans l'ordre :
+**La règle des bornes strictes (`lt` / `gt`) :**
+Le jour de départ est considéré comme "libre" (un client peut arriver l'après-midi du jour où le précédent part le matin). Par conséquent, les opérateurs utilisés doivent être stricts (`lt` pour `<` et `gt` pour `>`). On n'utilise jamais `<=` ou `>=`.
 
-1.  **Mettre à jour le code JavaScript (Prisma Client) :**
-    ```bash
-    npx prisma generate
-    ```
-2.  **Synchroniser MySQL (Méthode Bulldozer pour le dev) :**
-    ```bash
-    npx prisma db push --force-reset
-    ```
-3.  **Exécuter le script de Seed (avec les variables d'environnement) :**
-    ```bash
-    node --env-file=.env prisma/seed.js
-    ```
+## 3. Le Filtre de Relation `none` (NOT EXISTS)
+Pour traduire cette exclusion en base de données, on utilise le mot-clé `none` de Prisma. Il est l'équivalent direct du `NOT EXISTS` en SQL. 
 
----
+Il permet de dire : *"Renvoie-moi cette chambre uniquement si le nombre de réservations qui correspondent aux critères ci-dessous est égal à ZÉRO"*.
 
- # node --env-file=.env prisma/seed.js
+**Implémentation dans Express / Prisma :**
+```javascript
+// Si le client a renseigné les deux dates dans sa recherche
+if (date_debut && date_fin) {
+    where.Reservation = {
+        none: {
+            // Règle 1 : On ne bloque la chambre que si la réservation est validée
+            statut: 'confirmee', 
+            
+            // Règle 2 : L'arrivée en base est AVANT ma date de fin demandée
+            date_arrivee: { lt: new Date(date_fin) },
+            
+            // Règle 3 : Le départ en base est APRÈS ma date de début demandée
+            date_depart: { gt: new Date(date_debut) }       
+        }
+    }   
+}
+```
+*Note : Si une réservation en base se chevauche mais possède le statut `refusee` ou `annulee`, la condition `statut: 'confirmee'` n'est pas remplie, le `none` considère qu'il n'y a pas de conflit, et la chambre remonte dans les résultats comme étant libre.*

@@ -38,7 +38,7 @@ model Comptes{
 id Int @id @default(autoincrement())
 role String 
 email String @unique 
-motDePasseClair String @map("mot_de_passe_clair")
+motDePasse String @map("mot_de_passe")
 nom String 
 prenom String
 hotel Hotels? @relation(fields: [hotelId], references: [id])//ne sert que pour prisma
