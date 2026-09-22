@@ -91,13 +91,19 @@ app.post('/auth/register', async(req, res) =>{
 
 app.post('/auth/login', async (req, res) => {
     const { email, motDePasse } = req.body;
-    const compte = await prisma.compte.findUnique({ where: { email } });
-    if (!compte || !(await bcrypt.compare(motDePasse, comptes.motDePasse)))
-    {
+  
+
+    const compte = await prisma.comptes.findUnique({ where: { email } });
+    if (!compte || !(await bcrypt.compare(motDePasse, compte.motDePasse))) {
         return res.status(401).json({ erreur: 'identifiants invalides' });
     }
-    const token = jwt.sign({ id: comptes.id, role: comptes.role },
-    process.env.JWT_SECRET, { expiresIn: '24h' });
+    
+    const token = jwt.sign(
+        { id: compte.id, role: compte.role },
+        process.env.JWT_SECRET, 
+        { expiresIn: '24h' }
+    );
+    
     res.json({ token });
 });
 
