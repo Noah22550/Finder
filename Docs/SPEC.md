@@ -259,3 +259,160 @@ if (date_debut && date_fin) {
 }
 ```
 *Note : Si une réservation en base se chevauche mais possède le statut `refusee` ou `annulee`, la condition `statut: 'confirmee'` n'est pas remplie, le `none` considère qu'il n'y a pas de conflit, et la chambre remonte dans les résultats comme étant libre.*
+# Guide d'implémentation : Sécurisation et Routes Protégées (Projet Finder)
+
+Ce document récapitule l'ensemble des concepts, des codes et des bonnes pratiques mis en place pour sécuriser l'API Express avec des jetons JWT et structurer les opérations CRUD (Création, Lecture, Modification, Suppression) associées aux utilisateurs et aux chambres.
+
+---
+
+## 1. Le Middleware d'Authentification (`authentifier`)
+
+Le middleware agit comme un vigile à l'entrée des routes protégées. Il intercepte l'en-tête `Authorization`, extrait le jeton JWT, le vérifie à l'aide de la clé secrète, et injecte le payload décodé dans `req.utilisateur`.
+
+```javascript
+import jwt from 'jsonwebtoken';
+
+function authentifier(req, res, next) {
+    const entete = req.headers.authorization || '';
+    const token = entete.replace('Bearer ', '');
+    try {
+        // Décode le jeton et stocke { id, role } dans req.utilisateur
+        req.utilisateur = jwt.verify(token, process.env.JWT_SECRET);
+        next();
+    } catch {
+        res.status(401).json({ erreur: 'jeton absent ou invalide' });
+    }
+}
+
+```
+
+* **Sécurité couverte :** Gère l'absence de jeton, un jeton invalide ou un jeton expiré en renvoyant systématiquement un code HTTP `401 Unauthorized`.
+
+---
+
+## 2. La Déconnexion Stateless (`POST /auth/logout`)
+
+Puisque les JWT sont sans état (*stateless*), le serveur ne conserve pas de session active. La déconnexion consiste simplement à valider que l'utilisateur possède un jeton valide avant de répondre, laissant le soin au client (front-end) d'effacer le jeton de sa mémoire.
+
+```javascript
+app.post('/auth/logout', authentifier, (req, res) => {
+    res.status(204).end(); // 204 No Content
+});
+
+```
+
+---
+
+## 3. Gestion des Chambres (Routes Protégées)
+
+Les routes d'écriture (`POST`, `PATCH`, `DELETE`) nécessitent d'être protégées par le middleware `authentifier` et de cibler rigoureusement les identifiants en base de données.
+
+### A. Création d'une chambre (`POST`)
+
+```javascript
+app.post('/chambres', authentifier, async (req, res) => {
+    try {
+        const newChambre = await prisma.chambres.create({
+            data: { ...req.body }
+        });
+        res.status(201).json(newChambre);
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
+
+```
+
+### B. Modification d'une chambre (`PATCH`)
+
+On cible spécifiquement la ressource via l'identifiant passé dans l'URL (`req.params.id`).
+
+```javascript
+app.patch('/chambres/:id', authentifier, async (req, res) => {
+    try {
+        const upChambre = await prisma.chambres.update({
+            where: { id: Number(req.params.id) },
+            data: { ...req.body }
+        });
+        res.json(upChambre);
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
+
+```
+
+### C. Suppression d'une chambre (`DELETE`)
+
+```javascript
+app.delete('/chambres/:id', authentifier, async (req, res) => {
+    try {
+        await prisma.chambres.delete({
+            where: { id: Number(req.params.id) }
+        });
+        res.status(204).end();
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
+
+```
+
+---
+
+## 4. Gestion du Profil Utilisateur (`/voyageurs/me`)
+
+Pour éviter toute usurpation d'identité, les routes personnelles n'utilisent **jamais** d'ID dans l'URL ou dans le corps de la requête. Elles s'appuient exclusivement sur l'ID présent dans le jeton (`req.utilisateur.id`).
+
+### A. Consultation du profil (`GET`)
+
+Le filtre `select` permet d'exclure les données sensibles comme le mot de passe hashé.
+
+```javascript
+app.get('/voyageurs/me', authentifier, async (req, res) => {
+    const moi = await prisma.comptes.findUnique({
+        where: { id: req.utilisateur.id },
+        select: { id: true, role: true, email: true, nom: true, prenom: true }
+    });
+    res.json(moi);
+});
+
+```
+
+### B. Modification du profil (`PATCH`)
+
+```javascript
+app.patch('/voyageurs/me', authentifier, async (req, res) => {
+    try {
+        const upVoyageur = await prisma.comptes.update({
+            where: { id: req.utilisateur.id },
+            data: { ...req.body }
+        });
+        res.json(upVoyageur);
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
+
+```
+
+---
+
+## 5. Astuces pour les tests avec `curl` (PowerShell)
+
+Sous PowerShell, l'utilisation de guillemets échappés directement dans la ligne de commande `-d` pose souvent des problèmes de syntaxe JSON. La meilleure pratique consiste à utiliser des fichiers JSON temporaires.
+
+1. **Créer un fichier de données (ex: `profil.json`) :**
+```json
+{
+  "telephone": "06 99 88 77 66"
+}
+
+```
+
+
+2. **Exécuter la requête `curl` en pointant vers le fichier :**
+```cmd
+curl.exe -i -X PATCH http://localhost:3000/voyageurs/me -H "Authorization: Bearer VOTRE_JETON" -H "Content-Type: application/json" -d "@profil.json"
+
+```

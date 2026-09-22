@@ -88,7 +88,13 @@ app.get('/hotels/:id/chambres', async (req,res) =>{
     }
     res.json(chambres);
 });
-
+app.get('/voyageur/me', authentifier, async (req, res) => {
+    const moi = await prisma.comptes.findUnique({
+        where: { id: req.utilisateur.id},
+        select: {id: true, role: true, email: true, nom: true, prenom: true}
+    })
+    res.json(moi)
+})
 
 // POST //
 
@@ -141,15 +147,28 @@ app.post('/chambres', authentifier, async (req, res) => {
 // Patch //
 app.patch('/chambres', authentifier, async (req, res) => {
     try {
-        const newChambre = await prisma.chambres.updateMany({
+        const upChambre = await prisma.chambres.update({
             where: { id: Number(req.params.id) },
-            data: {...req.body,}
+            data: {...req.body}
         });
-        res.status(201).json(newChambre);
+        res.status(201).json(upChambre);
     } catch (erreur) {
         res.status(400).json({ erreur: erreur.message });
     }
 });
+
+app.patch('/voyageur/me', authentifier, async (req, res)=>{
+    try{
+        const upVoyageur = await prisma.comptes.update({
+            where: {id: req.utilisateur.id},
+            data: {...req.body}
+        })
+        res.status(201).json(upVoyageur)
+    } catch (erreur){
+        res.status(400).json({erreur: erreur.message})
+    }
+
+})
 
 // DELETE //
 
