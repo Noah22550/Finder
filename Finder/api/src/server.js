@@ -8,8 +8,20 @@ const prisma = new PrismaClient();
 
 app.use(express.json());
 
-// GET //
+// MIDDLEWARE //
 
+function authentifier(req, res, next) {
+    const entete = req.headers.authorization || '';
+    const token = entete.replace('Bearer ', '');
+    try {
+        req.utilisateur = jwt.verify(token, process.env.JWT_SECRET);
+        next();
+    } catch {
+        res.status(401).json({ erreur: 'jeton absent ou invalide' });
+    }
+}
+
+// GET //
 app.get('/chambres', async (req, res) => {
     const { hotel, capacite, categorie, prixMax, date_debut, date_fin } = req.query;
     const where = {};
@@ -97,7 +109,7 @@ app.post('/auth/login', async (req, res) => {
     if (!compte || !(await bcrypt.compare(motDePasse, compte.motDePasse))) {
         return res.status(401).json({ erreur: 'identifiants invalides' });
     }
-    
+
     const token = jwt.sign(
         { id: compte.id, role: compte.role },
         process.env.JWT_SECRET, 
@@ -107,9 +119,15 @@ app.post('/auth/login', async (req, res) => {
     res.json({ token });
 });
 
+app.post('/chambres', authentifier, async (req, res) => {
+    res.status(201).json({ message: "Route protégée atteinte" });
+});
 
+app.post('/auth/logout', authentifier, (req, res) => {
+    res.status(204).end();
+});
 
-app.listen(3000, () => {
+app.listen(process.env.PORT, () => {
     console.log("Serveur démarré !");
 });
 
