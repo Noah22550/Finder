@@ -20,6 +20,13 @@ function authentifier(req, res, next) {
         res.status(401).json({ erreur: 'jeton absent ou invalide' });
     }
 }
+function exigeRole(...roles) {
+    return (req, res, next) =>
+    roles.includes(req.utilisateur.role) ? next() : res.status(403).json({
+    erreur: 'acces refuse' });
+}
+//app.post('/livres', authentifier, exigeRole('bibliothecaire'), creer);
+//app.get('/adherents/me', authentifier, exigeRole('adherent'), monProfil);
 
 // GET //
 app.get('/chambres', async (req, res) => {
@@ -43,8 +50,8 @@ app.get('/chambres', async (req, res) => {
         where.Reservation = {
             none: {
                 statut: 'confirmee',
-                date_arrivee: { lt: new Date(date_fin) },
-                date_depart: { gt: new Date(date_debut) }       
+                dateArrivee: { lt: new Date(date_fin) },
+                dateDepart: { gt: new Date(date_debut) }       
             }
         }   
     }   
@@ -88,7 +95,7 @@ app.get('/hotels/:id/chambres', async (req,res) =>{
     }
     res.json(chambres);
 });
-app.get('/voyageur/me', authentifier, async (req, res) => {
+app.get('/voyageur/me', authentifier,exigeRole('voyageur'), async (req, res) => {
     const moi = await prisma.comptes.findUnique({
         where: { id: req.utilisateur.id},
         select: {id: true, role: true, email: true, nom: true, prenom: true}
@@ -125,15 +132,12 @@ app.post('/auth/login', async (req, res) => {
     res.json({ token });
 });
 
-app.post('/chambres', authentifier, async (req, res) => {
-    res.status(201).json({ message: "Route protégée atteinte" });
-});
 
 app.post('/auth/logout', authentifier, (req, res) => {
     res.status(204).end();
 });
 
-app.post('/chambres', authentifier, async (req, res) => {
+app.post('/chambres', authentifier,exigeRole('hotelier'), async (req, res) => {
     try {
         const newChambre = await prisma.chambres.create({
             data: {...req.body,}
@@ -145,7 +149,7 @@ app.post('/chambres', authentifier, async (req, res) => {
 });
 
 // Patch //
-app.patch('/chambres', authentifier, async (req, res) => {
+app.patch('/chambres/:id', authentifier,exigeRole('hotelier'), async (req, res) => {
     try {
         const upChambre = await prisma.chambres.update({
             where: { id: Number(req.params.id) },
@@ -157,7 +161,7 @@ app.patch('/chambres', authentifier, async (req, res) => {
     }
 });
 
-app.patch('/voyageur/me', authentifier, async (req, res)=>{
+app.patch('/voyageur/me', authentifier,exigeRole('voyageur'), async (req, res)=>{
     try{
         const upVoyageur = await prisma.comptes.update({
             where: {id: req.utilisateur.id},
@@ -172,7 +176,7 @@ app.patch('/voyageur/me', authentifier, async (req, res)=>{
 
 // DELETE //
 
-app.delete('/chambres', authentifier, async (req, res) => {
+app.delete('/chambres/:id', authentifier,exigeRole( 'hotelier'), async (req, res) => {
     try {
         await prisma.chambres.delete({
             where: { id: Number(req.params.id) }
