@@ -237,6 +237,42 @@ app.patch('/voyageur/me', authentifier, exigeRole('voyageur'), validerCorps(sche
         res.status(400).json({ erreur: erreur.message });
     }
 });
+const TRANSITIONS_AUTORISEES = {
+en_attente: ['confirmee', 'refusee'],
+confirmee: ['annulee', 'terminee']
+
+};
+function transitionValide(statutActuel, statutVoulu) {
+ return (TRANSITIONS_AUTORISEES[statutActuel] || []).includes(statutVoulu);
+}
+
+app.patch('/reservations/:id', authentifier, exigeRole('hotelier'), async (req, res) => {
+    try {
+        const reservationExistante = await prisma.reservations.findUnique({
+            where: { id: Number(req.params.id) },
+            include: { chambre: true }
+        });
+        if (!reservationExistante) {
+            return res.status(404).json({ erreur: 'Réservation non trouvée' });
+        }
+        const chambre = await prisma.chambres.findUnique({
+            where: { id: reservationExistante.chambreId }
+        });
+        if (chambre.hotelId !== req.utilisateur.hotelId) {
+            return res.status(403).json({ erreur: 'Accès refusé : cette réservation ne vous appartient pas' });
+        }
+        if (!transitionValide(reservationExistante.statut, req.body.statut)) {
+            return res.status(400).json({ erreur: 'Transition non autorisée' });
+        }
+        res.status(200).json(await prisma.reservations.update({
+        where: { id: Number(req.params.id) },
+        data: { statut: req.body.statut }
+    }));
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+
+});
 
 // DELETE //
 
