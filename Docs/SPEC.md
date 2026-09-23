@@ -416,3 +416,138 @@ Sous PowerShell, l'utilisation de guillemets échappés directement dans la lign
 curl.exe -i -X PATCH http://localhost:3000/voyageurs/me -H "Authorization: Bearer VOTRE_JETON" -H "Content-Type: application/json" -d "@profil.json"
 
 ```
+Voici le contenu complet formaté dans un bloc Markdown prêt à être copié et enregistré dans un fichier nommé `documentation-securite.md` à la racine de votre projet :
+
+```markdown
+# Documentation Technique : Sécurité, Validation et Middlewares — API Finder
+
+Cette documentation présente l'architecture complète de sécurité, de validation et d'autorisation mise en place dans l'API **Finder** (Node.js, Express, Prisma, Zod et JWT).
+
+---
+
+## 1. Vue d'ensemble de l'architecture de sécurité
+
+Le pipeline de sécurité s'articule autour de plusieurs couches successives :
+* **Authentification (`authentifier`)** : Vérifie l'identité de l'utilisateur à l'aide d'un jeton JWT.
+* **Autorisation (`exigeRole`)** : Restreint l'accès aux routes selon le rôle de l'utilisateur.
+* **Validation (`validerCorps` / `validerQuery`)** : Valide, nettoie et type les données entrantes via des schémas Zod.
+* **Contrôle granulaire (P4a / P4b)** : Gère l'existence des ressources (404) et l'appartenance organisationnelle (403).
+
+---
+
+## 2. Middlewares d'Authentification et d'Autorisation
+
+### A. L'Authentification (`authentifier`)
+Intercepte l'en-tête HTTP `Authorization`, extrait le jeton de type `Bearer` et valide sa signature cryptographique.
+
+```javascript
+function authentifier(req, res, next) {
+    const entete = req.headers.authorization || '';
+    const token = entete.replace('Bearer ', '');
+    try {
+        req.utilisateur = jwt.verify(token, process.env.JWT_SECRET);
+        next();
+    } catch {
+        res.status(401).json({ erreur: 'jeton absent ou invalide' });
+    }
+}
+
+```
+
+### B. L'Autorisation par Rôle (`exigeRole`)
+
+Vérifie si le rôle porté par l'utilisateur connecté fait partie des rôles autorisés pour accéder à la ressource.
+
+```javascript
+function exigeRole(...roles) {
+    return (req, res, next) =>
+        roles.includes(req.utilisateur.role) 
+            ? next() 
+            : res.status(403).json({ erreur: 'acces refuse' });
+}
+
+```
+
+---
+
+## 3. Validation et Filtrage des Données avec Zod
+
+### A. Validation des corps de requête (`validerCorps`)
+
+Utilisé pour les méthodes `POST` et `PATCH` (`req.body`). Valide les données, renvoie un statut `400 Bad Request` avec un tableau d'erreurs détaillé (`validation.error.issues`) en cas d'échec, ou nettoie la charge utile en cas de succès.
+
+```javascript
+function validerCorps(schema) {
+    return (req, res, next) => {
+        const validation = schema.safeParse(req.body);
+        if (!validation.success) {
+            return res.status(400).json({ erreurs: validation.error.issues });
+        }
+        req.body = validation.data;
+        next();
+    };
+}
+
+```
+
+### B. Validation des paramètres d'URL (`validerQuery`)
+
+Utilisé pour les requêtes `GET` (`req.query`). Utilise `z.coerce` pour convertir automatiquement les types transmis dans l'URL avant d'appliquer les contraintes du schéma.
+
+```javascript
+function validerQuery(schema) {
+    return (req, res, next) => {
+        const validation = schema.safeParse(req.query);
+        if (!validation.success) {
+            return res.status(400).json({ erreurs: validation.error.issues });
+        }
+        req.query = validation.data;
+        next();
+    };
+}
+
+```
+
+---
+
+## 4. Gestion de l'Existence (P4a) et de l'Appartenance (P4b)
+
+Pour les opérations sensibles (`PATCH` et `DELETE`), un contrôle direct est opéré dans le corps de la route, après la lecture en base de données.
+
+* **P4a (Existence - 404) :** Vérifie que la ressource existe. Si elle est introuvable, l'API renvoie immédiatement un statut `404 Not Found` (testé en priorité avant tout autre contrôle).
+* **P4b (Appartenance - 403) :** Compare l'attribut organisationnel (`hotelId`) de la ressource lue avec celui porté par le jeton de l'utilisateur (`req.utilisateur.hotelId`). En cas de non-concordance, un statut `403 Forbidden` est retourné.
+
+### Exemple d'implémentation (`PATCH /chambres/:id`) :
+
+```javascript
+app.patch('/chambres/:id', authentifier, exigeRole('hotelier'), validerCorps(schemaChambreModif), async (req, res) => {
+    try {
+        // 1. P4a : Vérification de l'existence (404 en premier)
+        const chambreExistante = await prisma.chambres.findUnique({
+            where: { id: Number(req.params.id) }
+        });
+        if (!chambreExistante) {
+            return res.status(404).json({ erreur: 'Chambre non trouvée' });
+        }
+
+        // 2. P4b : Vérification de l'appartenance (403 si l'hôtel ne correspond pas)
+        if (chambreExistante.hotelId !== req.utilisateur.hotelId) {
+            return res.status(403).json({ erreur: 'Accès refusé' });
+        }
+
+        // 3. Mise à jour effective
+        const upChambre = await prisma.chambres.update({
+            where: { id: Number(req.params.id) },
+            data: { ...req.body }
+        });
+        res.status(200).json(upChambre);
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
+
+```
+
+```
+
+```
