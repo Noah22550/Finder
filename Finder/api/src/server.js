@@ -255,10 +255,7 @@ app.patch('/reservations/:id', authentifier, exigeRole('hotelier'), async (req, 
         if (!reservationExistante) {
             return res.status(404).json({ erreur: 'Réservation non trouvée' });
         }
-        const chambre = await prisma.chambres.findUnique({
-            where: { id: reservationExistante.chambreId }
-        });
-        if (chambre.hotelId !== req.utilisateur.hotelId) {
+        if (reservationExistante.chambre.hotelId !== req.utilisateur.hotelId) {
             return res.status(403).json({ erreur: 'Accès refusé : cette réservation ne vous appartient pas' });
         }
         if (!transitionValide(reservationExistante.statut, req.body.statut)) {
