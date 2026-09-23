@@ -5,7 +5,7 @@ Règle : relue au début de chaque séance ; chaque amendement est daté dans le
 ## Étape 1 - en mémoire
 [X] `npm run dev` démarre sans erreur -> le terminal affiche l'adresse du serveur
 [X] `GET /health` -> 200, `{"ok":true}`
-[ ] Kit chargé une seule fois au démarrage -> `readFileSync` hors des routes
+[X] Kit chargé une seule fois au démarrage -> `readFileSync` hors des routes
 [X] `GET /hotels` -> 200, tableau de 3 hôtels
 [X] `GET /hotels/:id` -> 200 la fiche, ou 404 avec corps JSON
 [X] `GET /chambres` -> 200, tableau de 32 chambres
@@ -18,7 +18,7 @@ Règle : relue au début de chaque séance ; chaque amendement est daté dans le
 [X] E2 Base MySQL via Prisma : schéma, migration, seed du kit -> tables visibles dans Adminer
 [X] E3 Recherche de chambres disponibles -> `GET /chambres?...` filtre
 [X] E4 Inscription, connexion JWT 24 h, écritures protégées -> sans jeton 401, mauvais rôle 403
-[ ] E5 Validation Zod [ACCEPTABLE] -> corps invalide 400, jamais 500
+[X] E5 Validation Zod [ACCEPTABLE] -> corps invalide 400, jamais 500
 [ ] E6 Réservations et statuts -> `en_attente`, `confirmee`, `refusee`, `annulee`
 [ ] E7 Documentation Swagger de toutes les routes -> `/docs` les affiche toutes
 [ ] E8 Tests et recette -> `npm test` passe, TA-001 à TA-010

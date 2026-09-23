@@ -2,7 +2,7 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { schemaInscription, schemaConnexion, schemaModifCompte, schemaChambre, schemaChambreModif, schemaChambreGet } from './schemas.js';
+import { schemaInscription, schemaConnexion, schemaModifCompte, schemaChambre, schemaChambreModif, schemaChambreGet, schemaReservation } from './schemas.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -20,6 +20,7 @@ function validerCorps(schema) {
         next();
     };
 }
+// pour validerQuery, on va regarder req.query au lieu de req.body donc pour les GET
 function validerQuery(schema) {
     return (req, res, next) => {
         const validation = schema.safeParse(req.query); // On regarde req.query !
@@ -116,6 +117,26 @@ app.get('/voyageur/me', authentifier,exigeRole('voyageur'), async (req, res) => 
     res.json(moi)
 })
 
+app.get('/reservations/mine', authentifier, exigeRole('voyageur'), async (req, res) => {
+        const reservations = await prisma.reservations.findMany({
+            where: { voyageurId: req.utilisateur.id },
+            orderBy: { dateArrivee: 'asc' }
+        });
+        if(reservations.length === 0){
+            return res.status(404).json({error: 'Aucune réservation trouvée pour cet utilisateur'});
+        }
+        res.json(reservations);
+});
+app.get('/reservations/received', authentifier, exigeRole('hotelier'), async (req, res) => {
+    const reservations = await prisma.reservations.findMany({
+        where: { chambre: { hotelId: req.utilisateur.hotelId } },
+        orderBy: { dateArrivee: 'asc' }
+    });
+    if(reservations.length === 0){
+        return res.status(404).json({error: 'Aucune réservation trouvée pour cet hôtel'});
+    }
+    res.json(reservations);
+});
 // POST //
 
 app.post('/auth/register', validerCorps(schemaInscription), async(req, res) =>{
@@ -156,6 +177,19 @@ app.post('/chambres', authentifier, exigeRole('hotelier'), validerCorps(schemaCh
             data: {...req.body,}
         });
         res.status(201).json(newChambre);
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
+
+app.post('/reservation', authentifier, exigeRole('voyageur'), validerCorps(schemaReservation), async (req, res) => {
+    try {
+        const { chambreId, dateArrivee, dateDepart, nbPersonnes, demandeSpecial } = req.body;
+    
+        const nouvelleReservation = await prisma.reservations.create({
+            data: {voyageurId: req.utilisateur.id,chambreId,dateArrivee, dateDepart,nbPersonnes,demandeSpecial: demandeSpecial || null,statut: 'en_attente'}
+        });
+        res.status(201).json(nouvelleReservation);
     } catch (erreur) {
         res.status(400).json({ erreur: erreur.message });
     }
