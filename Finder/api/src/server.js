@@ -2,13 +2,24 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { schemaInscription, schemaConnexion, schemaModifCompte, schemaChambre, schemaChambreModif } from './schemas.js';
 
 const app = express();
 const prisma = new PrismaClient();
 
 app.use(express.json());
 
-// MIDDLEWARE //
+// MIDDLEWARE & zod //
+function validerCorps(schema) {
+    return (req, res, next) => {
+        const validation = schema.safeParse(req.body);
+        if (!validation.success) {
+            return res.status(400).json({ erreurs: validation.error.errors });
+        }
+        req.body = validation.data;
+        next();
+    };
+}
 
 function authentifier(req, res, next) {
     const entete = req.headers.authorization || '';
@@ -105,7 +116,7 @@ app.get('/voyageur/me', authentifier,exigeRole('voyageur'), async (req, res) => 
 
 // POST //
 
-app.post('/auth/register', async(req, res) =>{
+app.post('/auth/register', validerCorps(schemaInscription), async(req, res) =>{
     const { email,motDePasse, nom, prenom, telephone, note} = req.body;
     const compte = await prisma.comptes.create({
         data:{email, motDePasse: await bcrypt.hash(motDePasse, 10), nom, prenom, telephone, note, role: 'voyageur'},
@@ -114,7 +125,7 @@ app.post('/auth/register', async(req, res) =>{
     res.status(201).json(compte)
 }  )
 
-app.post('/auth/login', async (req, res) => {
+app.post('/auth/login',validerCorps(schemaConnexion), async (req, res) => {
     const { email, motDePasse } = req.body;
   
 
@@ -137,7 +148,7 @@ app.post('/auth/logout', authentifier, (req, res) => {
     res.status(204).end();
 });
 
-app.post('/chambres', authentifier,exigeRole('hotelier'), async (req, res) => {
+app.post('/chambres', authentifier,exigeRole('hotelier'),validerCorps(schemaChambre), async (req, res) => {
     try {
         const newChambre = await prisma.chambres.create({
             data: {...req.body,}
@@ -149,7 +160,7 @@ app.post('/chambres', authentifier,exigeRole('hotelier'), async (req, res) => {
 });
 
 // Patch //
-app.patch('/chambres/:id', authentifier,exigeRole('hotelier'), async (req, res) => {
+app.patch('/chambres/:id', authentifier,exigeRole('hotelier'),validerCorps(schemaChambreModif), async (req, res) => {
     try {
         const upChambre = await prisma.chambres.update({
             where: { id: Number(req.params.id) },
@@ -161,18 +172,22 @@ app.patch('/chambres/:id', authentifier,exigeRole('hotelier'), async (req, res) 
     }
 });
 
-app.patch('/voyageur/me', authentifier,exigeRole('voyageur'), async (req, res)=>{
-    try{
-        const upVoyageur = await prisma.comptes.update({
-            where: {id: req.utilisateur.id},
-            data: {...req.body}
-        })
-        res.status(201).json(upVoyageur)
-    } catch (erreur){
-        res.status(400).json({erreur: erreur.message})
-    }
+app.patch('/voyageur/me', authentifier, exigeRole('voyageur'), validerCorps(schemaModifCompte), async (req, res) => {
+    try {
+        const donneesAModifier = { ...req.body };
+        if (donneesAModifier.motDePasse) {
+            donneesAModifier.motDePasse = await bcrypt.hash(donneesAModifier.motDePasse, 10);
+        }
 
-})
+        const upVoyageur = await prisma.comptes.update({
+            where: { id: req.utilisateur.id },
+            data: donneesAModifier
+        });
+        res.status(200).json(upVoyageur);
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
 
 // DELETE //
 

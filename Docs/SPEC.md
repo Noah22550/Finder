@@ -17,7 +17,7 @@ Règle : relue au début de chaque séance ; chaque amendement est daté dans le
 ## Étapes 2 à 8 - déclarées, non franchies
 [X] E2 Base MySQL via Prisma : schéma, migration, seed du kit -> tables visibles dans Adminer
 [X] E3 Recherche de chambres disponibles -> `GET /chambres?...` filtre
-[ ] E4 Inscription, connexion JWT 24 h, écritures protégées -> sans jeton 401, mauvais rôle 403
+[X] E4 Inscription, connexion JWT 24 h, écritures protégées -> sans jeton 401, mauvais rôle 403
 [ ] E5 Validation Zod [ACCEPTABLE] -> corps invalide 400, jamais 500
 [ ] E6 Réservations et statuts -> `en_attente`, `confirmee`, `refusee`, `annulee`
 [ ] E7 Documentation Swagger de toutes les routes -> `/docs` les affiche toutes
