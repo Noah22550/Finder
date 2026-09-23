@@ -1,0 +1,8 @@
+{
+  "numero": "101",
+  "categorie": "Standard",
+  "capacite": 2,
+  "prixNuit": "vingt",
+  "disponible": true,
+  "hotelId": 1
+}

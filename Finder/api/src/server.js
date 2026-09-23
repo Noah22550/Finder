@@ -14,7 +14,7 @@ function validerCorps(schema) {
     return (req, res, next) => {
         const validation = schema.safeParse(req.body);
         if (!validation.success) {
-            return res.status(400).json({ erreurs: validation.error.errors });
+            return res.status(400).json({ erreurs: validation.error.issues });
         }
         req.body = validation.data;
         next();
@@ -135,7 +135,7 @@ app.post('/auth/login',validerCorps(schemaConnexion), async (req, res) => {
     }
 
     const token = jwt.sign(
-        { id: compte.id, role: compte.role },
+        { id: compte.id, role: compte.role, hotelId: compte.hotelId },
         process.env.JWT_SECRET, 
         { expiresIn: '24h' }
     );
@@ -148,7 +148,7 @@ app.post('/auth/logout', authentifier, (req, res) => {
     res.status(204).end();
 });
 
-app.post('/chambres', authentifier,exigeRole('hotelier'),validerCorps(schemaChambre), async (req, res) => {
+app.post('/chambres', authentifier, exigeRole('hotelier'), validerCorps(schemaChambre), async (req, res) => {
     try {
         const newChambre = await prisma.chambres.create({
             data: {...req.body,}
@@ -160,13 +160,26 @@ app.post('/chambres', authentifier,exigeRole('hotelier'),validerCorps(schemaCham
 });
 
 // Patch //
-app.patch('/chambres/:id', authentifier,exigeRole('hotelier'),validerCorps(schemaChambreModif), async (req, res) => {
+app.patch('/chambres/:id', authentifier, exigeRole('hotelier'), validerCorps(schemaChambreModif), async (req, res) => {
     try {
+        // 1. P4a : Vérifier si la chambre existe (404 en premier)
+        const chambreExistante = await prisma.chambres.findUnique({
+            where: { id: Number(req.params.id) }
+        });
+        if (!chambreExistante) {
+            return res.status(404).json({ erreur: 'Chambre non trouvée' });
+        }
+
+        // 2. P4b : Vérifier que l'hôtelier possède bien cet hôtel (403 sinon)
+        if (chambreExistante.hotelId !== req.utilisateur.hotelId) {
+            return res.status(403).json({ erreur: 'Accès refusé : cette chambre ne vous appartient pas' });
+        }
+
         const upChambre = await prisma.chambres.update({
             where: { id: Number(req.params.id) },
-            data: {...req.body}
+            data: { ...req.body }
         });
-        res.status(201).json(upChambre);
+        res.status(200).json(upChambre);
     } catch (erreur) {
         res.status(400).json({ erreur: erreur.message });
     }
@@ -193,6 +206,17 @@ app.patch('/voyageur/me', authentifier, exigeRole('voyageur'), validerCorps(sche
 
 app.delete('/chambres/:id', authentifier,exigeRole( 'hotelier'), async (req, res) => {
     try {
+        // 1. P4a : Vérifier si la chambre existe (404 en premier)
+        const chambreExistante = await prisma.chambres.findUnique({
+            where: { id: Number(req.params.id) }
+        });
+        // 2. P4b : Vérifier l'appartenance (403 sinon)
+        if (!chambreExistante) {
+            return res.status(404).json({ erreur: 'Chambre non trouvée' });
+        }
+        if (chambreExistante.hotelId !== req.utilisateur.hotelId) {
+            return res.status(403).json({ erreur: 'Accès non autorisé' });
+        }
         await prisma.chambres.delete({
             where: { id: Number(req.params.id) }
         });
