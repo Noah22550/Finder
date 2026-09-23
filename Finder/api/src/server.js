@@ -2,7 +2,7 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { schemaInscription, schemaConnexion, schemaModifCompte, schemaChambre, schemaChambreModif } from './schemas.js';
+import { schemaInscription, schemaConnexion, schemaModifCompte, schemaChambre, schemaChambreModif, schemaChambreGet } from './schemas.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -17,6 +17,16 @@ function validerCorps(schema) {
             return res.status(400).json({ erreurs: validation.error.issues });
         }
         req.body = validation.data;
+        next();
+    };
+}
+function validerQuery(schema) {
+    return (req, res, next) => {
+        const validation = schema.safeParse(req.query); // On regarde req.query !
+        if (!validation.success) {
+            return res.status(400).json({ erreurs: validation.error.issues });
+        }
+        req.query = validation.data; 
         next();
     };
 }
@@ -40,22 +50,14 @@ function exigeRole(...roles) {
 //app.get('/adherents/me', authentifier, exigeRole('adherent'), monProfil);
 
 // GET //
-app.get('/chambres', async (req, res) => {
+app.get('/chambres', validerQuery(schemaChambreGet), async (req, res) => {
     const { hotel, capacite, categorie, prixMax, date_debut, date_fin } = req.query;
     const where = {};
     // 2. On écrit dans les colonnes exactes attendues par Prisma
-    if (hotel) {
-        where.hotel_Id = Number(hotel); 
-    }
-    if (capacite) {
-        where.capacite = { gte: Number(capacite) };
-    }
-    if (categorie) {
-        where.categorie = categorie;
-    }
-    if (prixMax) {
-        where.prix_nuit = { lte: Number(prixMax) }; 
-    }
+    if (hotel) {where.hotel_Id = Number(hotel); }
+    if (capacite) { where.capacite = { gte: Number(capacite) };}
+    if (categorie) {where.categorie = categorie;}
+    if (prixMax) {where.prix_nuit = { lte: Number(prixMax) }; }
     // Le filtre des dates
     if (date_debut && date_fin) {
         where.Reservation = {

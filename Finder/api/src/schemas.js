@@ -21,4 +21,11 @@ export const schemaChambre = z.object({
     disponible: z.boolean(),
     hotelId: z.number().int().positive()
 });
+
+export const schemaChambreGet = z.object({
+    categorie: z.enum(['simple', 'double', 'suite', 'luxe']).optional(),
+    capacite: z.coerce.number().int().positive().optional(),
+    prixMax: z.coerce.number().positive().optional()
+}
+);
 export const schemaChambreModif = schemaChambre.partial();
