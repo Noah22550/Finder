@@ -238,8 +238,11 @@ app.patch('/voyageur/me', authentifier, exigeRole('voyageur'), validerCorps(sche
     }
 });
 const TRANSITIONS_AUTORISEES = {
-en_attente: ['confirmee', 'refusee'],
-confirmee: ['annulee', 'terminee']
+    en_attente: ['confirmee', 'refusee'],
+    confirmee: ['annulee', 'terminee'],
+    refusee: [],
+    annulee: [],
+    terminee: []
 
 };
 function transitionValide(statutActuel, statutVoulu) {
@@ -271,6 +274,7 @@ app.patch('/reservations/:id', authentifier, exigeRole('hotelier'), async (req, 
 
 });
 
+
 // DELETE //
 
 app.delete('/chambres/:id', authentifier,exigeRole( 'hotelier'), async (req, res) => {
@@ -290,6 +294,30 @@ app.delete('/chambres/:id', authentifier,exigeRole( 'hotelier'), async (req, res
             where: { id: Number(req.params.id) }
         });
         res.status(204).end();
+    } catch (erreur) {
+        res.status(400).json({ erreur: erreur.message });
+    }
+});
+app.delete('/reservations/:id', authentifier, exigeRole('voyageur'), async (req, res) => {
+    try {
+        const reservationExistante = await prisma.reservations.findUnique({
+            where: { id: Number(req.params.id) }
+        });
+        if (!reservationExistante) {
+            return res.status(404).json({ erreur: 'Réservation non trouvée' });
+        }
+        if (reservationExistante.voyageurId !== req.utilisateur.id) {
+            return res.status(403).json({ erreur: 'Accès refusé : cette réservation ne vous appartient pas' });
+        }
+        if (!transitionValide(reservationExistante.statut, 'annulee')) {
+            return res.status(400).json({ erreur: 'Transition non autorisée : impossible d\'annuler' });
+        }
+        
+        res.status(200).json(await prisma.reservations.update({
+            where: { id: Number(req.params.id) },
+            data: { statut: "annulee" }
+        }));
+        
     } catch (erreur) {
         res.status(400).json({ erreur: erreur.message });
     }
