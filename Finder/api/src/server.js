@@ -249,7 +249,7 @@ function transitionValide(statutActuel, statutVoulu) {
  return (TRANSITIONS_AUTORISEES[statutActuel] || []).includes(statutVoulu);
 }
 
-app.patch('/reservations/:id', authentifier, exigeRole('hotelier'), async (req, res) => {
+app.patch('/reservations/:id', authentifier, exigeRole('hotelier'), transitionValide, async (req, res) => {
     try {
         const reservationExistante = await prisma.reservations.findUnique({
             where: { id: Number(req.params.id) },
@@ -298,7 +298,7 @@ app.delete('/chambres/:id', authentifier,exigeRole( 'hotelier'), async (req, res
         res.status(400).json({ erreur: erreur.message });
     }
 });
-app.delete('/reservations/:id', authentifier, exigeRole('voyageur'), async (req, res) => {
+app.delete('/reservations/:id', authentifier, exigeRole('voyageur'),transitionValide, async (req, res) => {
     try {
         const reservationExistante = await prisma.reservations.findUnique({
             where: { id: Number(req.params.id) }
