@@ -2,6 +2,8 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 import { schemaInscription, schemaConnexion, schemaModifCompte, schemaChambre, schemaChambreModif, schemaChambreGet, schemaReservation } from './schemas.js';
 
 const app = express();
@@ -249,7 +251,7 @@ function transitionValide(statutActuel, statutVoulu) {
  return (TRANSITIONS_AUTORISEES[statutActuel] || []).includes(statutVoulu);
 }
 
-app.patch('/reservations/:id', authentifier, exigeRole('hotelier'), transitionValide, async (req, res) => {
+app.patch('/reservations/:id', authentifier, exigeRole('hotelier'), async (req, res) => {
     try {
         const reservationExistante = await prisma.reservations.findUnique({
             where: { id: Number(req.params.id) },
@@ -298,7 +300,7 @@ app.delete('/chambres/:id', authentifier,exigeRole( 'hotelier'), async (req, res
         res.status(400).json({ erreur: erreur.message });
     }
 });
-app.delete('/reservations/:id', authentifier, exigeRole('voyageur'),transitionValide, async (req, res) => {
+app.delete('/reservations/:id', authentifier, exigeRole('voyageur'), async (req, res) => {
     try {
         const reservationExistante = await prisma.reservations.findUnique({
             where: { id: Number(req.params.id) }
@@ -322,8 +324,22 @@ app.delete('/reservations/:id', authentifier, exigeRole('voyageur'),transitionVa
         res.status(400).json({ erreur: erreur.message });
     }
 });
-
+/**
+* @openapi
+* /health:
+* get:
+* summary: Le serveur est debout
+* responses:
+* 200: { description: OK }
+*/
+app.get('/health', (req, res) => res.json({ ok: true }));
 // ecoute //
+const spec = swaggerJsdoc({
+ definition: { openapi: '3.0.0', info: { title: 'Finder API', version:
+'1.0.0' } },
+ apis: ['./server.js']
+});
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(spec));
 
 app.listen(process.env.PORT, () => {
     console.log("Serveur démarré !");
