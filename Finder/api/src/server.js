@@ -324,22 +324,18 @@ app.delete('/reservations/:id', authentifier, exigeRole('voyageur'), async (req,
         res.status(400).json({ erreur: erreur.message });
     }
 });
-/**
-* @openapi
-* /health:
-* get:
-* summary: Le serveur est debout
-* responses:
-* 200: { description: OK }
-*/
-app.get('/health', (req, res) => res.json({ ok: true }));
-// ecoute //
+
 const spec = swaggerJsdoc({
- definition: { openapi: '3.0.0', info: { title: 'Finder API', version:
-'1.0.0' } },
- apis: ['./server.js']
+ definition: {
+ openapi: '3.0.0',
+ info: { title: 'API Finder', version: '1.0.0' },
+ components: { securitySchemes: { bearerAuth: { type: 'http', scheme:
+'bearer', bearerFormat: 'JWT' } } },
+ },
+ apis: ['./src/**/*.js'],
 });
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(spec));
+
 
 app.listen(process.env.PORT, () => {
     console.log("Serveur démarré !");
