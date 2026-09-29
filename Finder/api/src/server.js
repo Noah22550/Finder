@@ -49,10 +49,31 @@ function exigeRole(...roles) {
     roles.includes(req.utilisateur.role) ? next() : res.status(403).json({
     erreur: 'acces refuse' });
 }
-//app.post('/livres', authentifier, exigeRole('bibliothecaire'), creer);
-//app.get('/adherents/me', authentifier, exigeRole('adherent'), monProfil);
 
 // GET //
+/**
+* @openapi
+* /chambres:
+* get:
+* summary: Récupérer les chambres
+* security: [{ validerQuery: [] }]
+* requestBody:
+* required: true
+* content:
+* application/json:
+* schema:
+* type: object
+* required: [titre, auteur]
+* properties:
+* titre: { type: string }
+* auteur: { type: string }
+le corps attendu, champ par champ : c'est exactement ce que le schéma Zod vérifie.
+Les deux doivent dire la même chose, sinon la doc ment
+* responses:
+* 201: { description: Livre créé }
+* 400: { description: Corps invalide }
+* 401: { description: Jeton absent ou invalide }
+*/
 app.get('/chambres', validerQuery(schemaChambreGet), async (req, res) => {
     const { hotel, capacite, categorie, prixMax, date_debut, date_fin } = req.query;
     const where = {};
