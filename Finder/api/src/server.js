@@ -18,7 +18,7 @@ function validerCorps(schema) {
         if (!validation.success) {
             return res.status(400).json({ erreurs: validation.error.issues });
         }
-        req.body = validation.data;
+        req.query = validation.data; 
         next();
     };
 }
@@ -29,7 +29,7 @@ function validerQuery(schema) {
         if (!validation.success) {
             return res.status(400).json({ erreurs: validation.error.issues });
         }
-        req.query = validation.data; 
+            req.queryValide = validation.data; 
         next();
     };
 }
@@ -52,33 +52,58 @@ function exigeRole(...roles) {
 
 // GET //
 /**
-* @openapi
-* /chambres:
-* get:
-* summary: Récupérer les chambres
-* security: [{ validerQuery: [] }]
-* requestBody:
-* required: true
-* content:
-* application/json:
-* schema:
-* type: object
-* required: [titre, auteur]
-* properties:
-* titre: { type: string }
-* auteur: { type: string }
-le corps attendu, champ par champ : c'est exactement ce que le schéma Zod vérifie.
-Les deux doivent dire la même chose, sinon la doc ment
-* responses:
-* 201: { description: Livre créé }
-* 400: { description: Corps invalide }
-* 401: { description: Jeton absent ou invalide }
-*/
+ * @openapi
+ * /chambres:
+ *   get:
+ *     summary: Récupérer les chambres
+ *     tags:
+ *       - Chambres
+ *     parameters:
+ *       - in: query
+ *         name: hotel
+ *         schema:
+ *           type: integer
+ *         description: ID de l'hôtel
+ *       - in: query
+ *         name: capacite
+ *         schema:
+ *           type: integer
+ *         description: Capacité minimale de la chambre
+ *       - in: query
+ *         name: categorie
+ *         schema:
+ *           type: string
+ *         description: Catégorie de la chambre
+ *       - in: query
+ *         name: prixMax
+ *         schema:
+ *           type: number
+ *         description: Prix maximum par nuit
+ *       - in: query
+ *         name: date_debut
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Date de début de la réservation
+ *       - in: query
+ *         name: date_fin
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Date de fin de la réservation
+ *     responses:
+ *       200:
+ *         description: Succès
+ *       400:
+ *         description: Requête invalide
+ *       404:
+ *         description: Ressource non trouvée
+ */
 app.get('/chambres', validerQuery(schemaChambreGet), async (req, res) => {
-    const { hotel, capacite, categorie, prixMax, date_debut, date_fin } = req.query;
+    const { hotel, capacite, categorie, prixMax, date_debut, date_fin } = req.queryValide;
     const where = {};
     // 2. On écrit dans les colonnes exactes attendues par Prisma
-    if (hotel) {where.hotel_Id = Number(hotel); }
+    if (hotel) {where.hotelId = Number(hotel); }
     if (capacite) { where.capacite = { gte: Number(capacite) };}
     if (categorie) {where.categorie = categorie;}
     if (prixMax) {where.prix_nuit = { lte: Number(prixMax) }; }
@@ -99,20 +124,87 @@ app.get('/chambres', validerQuery(schemaChambreGet), async (req, res) => {
 
     res.json(chambres);
 });
+/**
+ * @openapi
+ * /chambres/{id}:
+ *   get:
+ *     summary: Récupérer une chambre en fonction de son ID
+ *     tags:
+ *       - Chambres
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la chambre
+ *     responses:
+ *       200:
+ *         description: Succès
+ *       400:
+ *         description: ID invalide
+ *       404:
+ *         description: Chambre non trouvée
+ */
 app.get('/chambres/:id', async (req, res) => {
-        const chambre = await prisma.chambres.findUnique({
-            where: { id: Number(req.params.id) },
-        });
-        if (!chambre) {
-            return res.status(404).json({ error: 'Chambre non trouvée' });
-        }
-        res.json(chambre);
-});
+    const id = Number(req.params.id);
+    if (isNaN(id)) {
+        return res.status(400).json({ error: "L'ID fourni est invalide" });
+    }
+    const chambre = await prisma.chambres.findUnique({
+        where: { id: id },
+    });
 
+    if (!chambre) {
+        return res.status(404).json({ error: 'Chambre non trouvée' });
+    }
+    res.json(chambre);
+});
+/**
+ * @openapi
+ * /hotels:
+ *   get:
+ *     summary: Récupérer la liste des hôtels
+ *     tags:
+ *       - Hôtels
+ *     responses:
+ *       200:
+ *         description: Succès - Renvoie la liste des hôtels
+ *       500:
+ *         description: Erreur serveur
+ */
 app.get('/hotels', async (req, res) => {
-    res.json(await prisma.hotels.findMany({ orderBy: { id: 'asc' } }));
+    try {
+        const hotels = await prisma.hotels.findMany({
+            orderBy: { id: 'asc' }
+        });
+        res.json(hotels);
+    } catch (error) {
+        res.status(500).json({ error: "Erreur lors de la récupération des hôtels" });
+    }
 });
-
+/**
+ * @openapi
+ * /hotels/{id}:
+ *   get:
+ *     summary: Récupérer un hôtel en fonction de son ID
+ *     tags:
+ *       - Hôtels
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de l'hôtel
+ *     responses:
+ *       200:
+ *         description: Succès
+ *       400:
+ *         description: ID invalide
+ *       404:
+ *         description: Hotel non trouvé
+ */
 app.get('/hotels/:id', async (req,res) =>{
     const hotel = await prisma.hotels.findUnique({
         where: {id: Number(req.params.id)},
@@ -122,7 +214,32 @@ app.get('/hotels/:id', async (req,res) =>{
     }
     res.json(hotel);
 });
+/**
+ * @openapi
+ * /hotels/{id}/chambres:
+ *   get:
+ *     summary: Récupérer les chambres d'un hôtel en fonction de son ID
+ *     tags:
+ *       - Hôtels
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de l'hôtel
+ *     responses:
+ *       200:
+ *         description: Succès
+ *       400:
+ *         description: ID invalide
+ *       404:
+ *         description: chambre par rapport à l'hôtel non trouvée
+ */
 app.get('/hotels/:id/chambres', async (req,res) =>{
+    if(isNaN(Number(req.params.id))){
+        return res.status(400).json({error: "L'ID fourni est invalide"});
+    }
     const chambres = await prisma.chambres.findMany({
         where: {hotelId: Number(req.params.id)},
         orderBy: {id: 'asc'},
@@ -132,6 +249,23 @@ app.get('/hotels/:id/chambres', async (req,res) =>{
     }
     res.json(chambres);
 });
+/**
+ * @openapi
+ * /voyageur/me:
+ *   get:
+ *     summary: Récupérer les informations du voyageur connecté
+ *     tags:
+ *       - voyageur
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Succès
+ *       401:
+ *         description: Non autorisé
+ *       404:
+ *         description: Voyageur non trouvé
+ */
 app.get('/voyageur/me', authentifier,exigeRole('voyageur'), async (req, res) => {
     const moi = await prisma.comptes.findUnique({
         where: { id: req.utilisateur.id},
@@ -139,7 +273,23 @@ app.get('/voyageur/me', authentifier,exigeRole('voyageur'), async (req, res) => 
     })
     res.json(moi)
 })
-
+/**
+ * @openapi
+ * /reservations/mine:
+ *   get:
+ *     summary: Récupérer les informations d'un réservation du voyageur connecté
+ *     tags :
+ *      - reservation
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Succès
+ *       401:
+ *          description: Non autorisé
+ *       404:
+ *         description: Voyageur non trouvé
+ */
 app.get('/reservations/mine', authentifier, exigeRole('voyageur'), async (req, res) => {
         const reservations = await prisma.reservations.findMany({
             where: { voyageurId: req.utilisateur.id },
@@ -150,6 +300,23 @@ app.get('/reservations/mine', authentifier, exigeRole('voyageur'), async (req, r
         }
         res.json(reservations);
 });
+/**
+ * @openapi
+ * /reservations/received:
+ *   get:
+ *     summary: voir les réservations reçues par l'hôtelier connecté
+ *     tags :
+ *      - reservation
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Succès
+ *       401:
+ *          description: Non autorisé
+ *       404:
+ *         description: Voyageur non trouvé
+ */
 app.get('/reservations/received', authentifier, exigeRole('hotelier'), async (req, res) => {
     const reservations = await prisma.reservations.findMany({
         where: { chambre: { hotelId: req.utilisateur.hotelId } },
@@ -161,7 +328,46 @@ app.get('/reservations/received', authentifier, exigeRole('hotelier'), async (re
     res.json(reservations);
 });
 // POST //
-
+/**
+ * @openapi
+ * /auth/register:
+ *   post:
+ *     summary: Enregistrer un nouvel utilisateur
+ *     tags :
+ *        - connexion/insciption
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email de l'utilisateur
+ *               motDePasse:
+ *                 type: string
+ *                 description: Mot de passe de l'utilisateur
+ *               nom:
+ *                 type: string
+ *                 description: Nom de l'utilisateur
+ *               prenom:
+ *                 type: string
+ *                 description: Prénom de l'utilisateur
+ *               telephone:
+ *                 type: string
+ *                 description: Numéro de téléphone de l'utilisateur (optionnel)
+ *               note:
+ *                 type: string
+ *                 description: Note de l'utilisateur (optionnel)
+ *     responses:
+ *       201:
+ *         description: Création réussie
+ *       400:
+ *         description: Données invalides
+ *       409:
+ *         description: Email déjà utilisé
+ */
 app.post('/auth/register', validerCorps(schemaInscription), async(req, res) =>{
     const { email,motDePasse, nom, prenom, telephone, note} = req.body;
     const compte = await prisma.comptes.create({
@@ -170,11 +376,38 @@ app.post('/auth/register', validerCorps(schemaInscription), async(req, res) =>{
     })
     res.status(201).json(compte)
 }  )
-
+/**
+ * @openapi
+ * /auth/login:
+ *   post:
+ *     summary: Se connecter à un compte existant
+ *     tags :
+ *        - connexion/insciption
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email de l'utilisateur
+ *               motDePasse:
+ *                 type: string
+ *                 description: Mot de passe de l'utilisateur
+ *     responses:
+ *       200:
+ *         description: Connexion réussie (renvoie le token JWT)
+ *       400:
+ *         description: Données invalides (champs manquants)
+ *       401:
+ *         description: Identifiants incorrects (email ou mot de passe erroné)
+ *       500:
+ *         description: Erreur serveur
+ */
 app.post('/auth/login',validerCorps(schemaConnexion), async (req, res) => {
     const { email, motDePasse } = req.body;
-  
-
     const compte = await prisma.comptes.findUnique({ where: { email } });
     if (!compte || !(await bcrypt.compare(motDePasse, compte.motDePasse))) {
         return res.status(401).json({ erreur: 'identifiants invalides' });
@@ -189,11 +422,70 @@ app.post('/auth/login',validerCorps(schemaConnexion), async (req, res) => {
     res.json({ token });
 });
 
-
+/**
+ * @openapi
+ * /auth/logout:
+ *   post:
+ *     summary: Se déconnecter de l'application
+ *     tags:
+ *       - connexion/insciption
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       204:
+ *         description: Déconnexion réussie (aucun contenu renvoyé)
+ *       401:
+ *         description: Non autorisé (token manquant ou invalide)
+ */
 app.post('/auth/logout', authentifier, (req, res) => {
     res.status(204).end();
 });
 
+/**
+ * @openapi
+ * /chambres:
+ *   post:
+ *     summary: Créer une nouvelle chambre
+ *     tags:
+ *       - Chambres
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               hotelId:
+ *                 type: integer
+ *                 description: ID de l'hôtel concerné
+ *               numero:
+ *                 type: integer
+ *                 description: Numéro de la chambre
+ *               categorie:
+ *                 type: string
+ *                 description: Catégorie de la chambre (simple, double, familiale, suite)
+ *               capacite:
+ *                 type: integer
+ *                 description: Quantité maximale de voyageurs dans la chambre
+ *               prixNuit:
+ *                 type: integer
+ *                 description: Prix de la nuit
+ *               description:
+ *                 type: string
+ *                 description: Description détaillée de la chambre
+ *               disponible:
+ *                 type: integer
+ *                 description: 1 si disponible, 0 sinon
+ *     responses:
+ *       201:
+ *         description: Chambre créée avec succès
+ *       400:
+ *         description: Données invalides
+ *       401:
+ *         description: Non autorisé (token manquant ou invalide)
+ */
 app.post('/chambres', authentifier, exigeRole('hotelier'), validerCorps(schemaChambre), async (req, res) => {
     try {
         const newChambre = await prisma.chambres.create({
@@ -353,7 +645,7 @@ const spec = swaggerJsdoc({
  components: { securitySchemes: { bearerAuth: { type: 'http', scheme:
 'bearer', bearerFormat: 'JWT' } } },
  },
- apis: ['./src/**/*.js'],
+    apis: ['./src/**/*.js', './src/server.js', './server.js'],
 });
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(spec));
 

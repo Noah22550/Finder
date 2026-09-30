@@ -546,7 +546,280 @@ app.patch('/chambres/:id', authentifier, exigeRole('hotelier'), validerCorps(sch
     }
 });
 
+Voici une documentation synthétique au format Markdown pour documenter le problème et sa solution dans ton projet.
+
+---
+
+```markdown
+# Documentation : Erreur d'affectation sur `req.query` dans Express
+
+## 1. Description du problème
+Lors de l'implémentation d'un middleware de validation des paramètres d'URL (query params) avec **Zod**, une erreur serveur survient lors de la réassignation de `req.query` :
+
+```text
+TypeError: Cannot set property query of #<IncomingMessage> which has only a getter
+
 ```
+
+## 2. Cause racine
+
+Dans Express.js, `req.query` est une propriété configurée en **lecture seule** (accès via un *getter* uniquement).
+
+Lorsque l'on tente de remplacer l'objet `req.query` entier par le résultat typé de Zod via une réassignation directe (`req.query = validation.data`), JavaScript lève une exception de type `TypeError`.
+
+```javascript
+// ❌ INCORRECT : Provoque un TypeError
+req.query = validation.data;
+
+```
+
+## 3. Solutions
+
+### Solution A : Utiliser une propriété personnalisée (Recommandé)
+
+Au lieu d'écraser `req.query`, on attache les données validées et converties par Zod sur une nouvelle propriété de l'objet `req` (ex: `req.queryValidee`).
+
+**Middleware :**
+
+```javascript
+function validerQuery(schema) {
+    return (req, res, next) => {
+        const validation = schema.safeParse(req.query);
+        if (!validation.success) {
+            return res.status(400).json({ erreurs: validation.error.issues });
+        }
+        
+        // Stockage dans une nouvelle propriété
+        req.queryValidee = validation.data;
+        next();
+    };
+}
+
+```
+
+**Utilisation dans la route :**
+
+```javascript
+app.get('/chambres', validerQuery(schemaChambreGet), async (req, res) => {
+    // Récupération depuis la propriété personnalisée
+    const { hotelId, capacite, prixMax } = req.queryValidee;
+    
+    // ...
+});
+
+```
+
+---
+
+### Solution B : Modifier l'objet existant (`Object.assign`)
+
+Si vous souhaitez conserver l'accès aux données validées via `req.query` dans le reste de l'application, vous devez vider puis recharger l'objet existant sans modifier sa référence mémoire.
+
+**Middleware :**
+
+```javascript
+function validerQuery(schema) {
+    return (req, res, next) => {
+        const validation = schema.safeParse(req.query);
+        if (!validation.success) {
+            return res.status(400).json({ erreurs: validation.error.issues });
+        }
+        
+        // 1. Suppression des anciennes clés (strings brutes)
+        Object.keys(req.query).forEach(key => delete req.query[key]);
+        
+        // 2. Injection des données nettoyées et typées par Zod
+        Object.assign(req.query, validation.data);
+        
+        next();
+    };
+}
+
+```
+
+Voici une documentation synthétique au format Markdown pour documenter le problème et sa solution dans ton projet.
+
+---
+
+```markdown
+# Documentation : Erreur d'affectation sur `req.query` dans Express
+
+## 1. Description du problème
+Lors de l'implémentation d'un middleware de validation des paramètres d'URL (query params) avec **Zod**, une erreur serveur survient lors de la réassignation de `req.query` :
+
+```text
+TypeError: Cannot set property query of #<IncomingMessage> which has only a getter
+
+```
+
+## 2. Cause racine
+
+Dans Express.js, `req.query` est une propriété configurée en **lecture seule** (accès via un *getter* uniquement).
+
+Lorsque l'on tente de remplacer l'objet `req.query` entier par le résultat typé de Zod via une réassignation directe (`req.query = validation.data`), JavaScript lève une exception de type `TypeError`.
+
+```javascript
+// ❌ INCORRECT : Provoque un TypeError
+req.query = validation.data;
+
+```
+
+## 3. Solutions
+
+### Solution A : Utiliser une propriété personnalisée (Recommandé)
+
+Au lieu d'écraser `req.query`, on attache les données validées et converties par Zod sur une nouvelle propriété de l'objet `req` (ex: `req.queryValidee`).
+
+**Middleware :**
+
+```javascript
+function validerQuery(schema) {
+    return (req, res, next) => {
+        const validation = schema.safeParse(req.query);
+        if (!validation.success) {
+            return res.status(400).json({ erreurs: validation.error.issues });
+        }
+        
+        // Stockage dans une nouvelle propriété
+        req.queryValidee = validation.data;
+        next();
+    };
+}
+
+```
+
+**Utilisation dans la route :**
+
+```javascript
+app.get('/chambres', validerQuery(schemaChambreGet), async (req, res) => {
+    // Récupération depuis la propriété personnalisée
+    const { hotelId, capacite, prixMax } = req.queryValidee;
+    
+    // ...
+});
+
+```
+
+---
+
+### Solution B : Modifier l'objet existant (`Object.assign`)
+
+Si vous souhaitez conserver l'accès aux données validées via `req.query` dans le reste de l'application, vous devez vider puis recharger l'objet existant sans modifier sa référence mémoire.
+
+**Middleware :**
+
+```javascript
+function validerQuery(schema) {
+    return (req, res, next) => {
+        const validation = schema.safeParse(req.query);
+        if (!validation.success) {
+            return res.status(400).json({ erreurs: validation.error.issues });
+        }
+        
+        // 1. Suppression des anciennes clés (strings brutes)
+        Object.keys(req.query).forEach(key => delete req.query[key]);
+        
+        // 2. Injection des données nettoyées et typées par Zod
+        Object.assign(req.query, validation.data);
+        
+        next();
+    };
+}
+
+```
+
+Voici une documentation synthétique au format Markdown pour documenter le problème et sa solution dans ton projet.
+
+---
+
+```markdown
+# Documentation : Erreur d'affectation sur `req.query` dans Express
+
+## 1. Description du problème
+Lors de l'implémentation d'un middleware de validation des paramètres d'URL (query params) avec **Zod**, une erreur serveur survient lors de la réassignation de `req.query` :
+
+```text
+TypeError: Cannot set property query of #<IncomingMessage> which has only a getter
+
+```
+
+## 2. Cause racine
+
+Dans Express.js, `req.query` est une propriété configurée en **lecture seule** (accès via un *getter* uniquement).
+
+Lorsque l'on tente de remplacer l'objet `req.query` entier par le résultat typé de Zod via une réassignation directe (`req.query = validation.data`), JavaScript lève une exception de type `TypeError`.
+
+```javascript
+// ❌ INCORRECT : Provoque un TypeError
+req.query = validation.data;
+
+```
+
+## 3. Solutions
+
+### Solution A : Utiliser une propriété personnalisée (Recommandé)
+
+Au lieu d'écraser `req.query`, on attache les données validées et converties par Zod sur une nouvelle propriété de l'objet `req` (ex: `req.queryValidee`).
+
+**Middleware :**
+
+```javascript
+function validerQuery(schema) {
+    return (req, res, next) => {
+        const validation = schema.safeParse(req.query);
+        if (!validation.success) {
+            return res.status(400).json({ erreurs: validation.error.issues });
+        }
+        
+        // Stockage dans une nouvelle propriété
+        req.queryValidee = validation.data;
+        next();
+    };
+}
+
+```
+
+**Utilisation dans la route :**
+
+```javascript
+app.get('/chambres', validerQuery(schemaChambreGet), async (req, res) => {
+    // Récupération depuis la propriété personnalisée
+    const { hotelId, capacite, prixMax } = req.queryValidee;
+    
+    // ...
+});
+
+```
+
+---
+
+### Solution B : Modifier l'objet existant (`Object.assign`)
+
+Si vous souhaitez conserver l'accès aux données validées via `req.query` dans le reste de l'application, vous devez vider puis recharger l'objet existant sans modifier sa référence mémoire.
+
+**Middleware :**
+
+```javascript
+function validerQuery(schema) {
+    return (req, res, next) => {
+        const validation = schema.safeParse(req.query);
+        if (!validation.success) {
+            return res.status(400).json({ erreurs: validation.error.issues });
+        }
+        
+        // 1. Suppression des anciennes clés (strings brutes)
+        Object.keys(req.query).forEach(key => delete req.query[key]);
+        
+        // 2. Injection des données nettoyées et typées par Zod
+        Object.assign(req.query, validation.data);
+        
+        next();
+    };
+}
+
+```
+
+
 
 ```
 
