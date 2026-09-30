@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { schemaInscription, schemaConnexion, schemaModifCompte, schemaChambre, schemaChambreModif, schemaChambreGet, schemaReservation } from './schemas.js';
+import { schemaInscription, schemaConnexion, schemaModifCompte, schemaChambre, schemaChambreModif, schemaChambreGet, schemaReservation,schemaStatutReservation } from './schemas.js';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -18,7 +18,7 @@ function validerCorps(schema) {
         if (!validation.success) {
             return res.status(400).json({ erreurs: validation.error.issues });
         }
-        req.query = validation.data; 
+        req.body = validation.data; 
         next();
     };
 }
@@ -100,29 +100,22 @@ function exigeRole(...roles) {
  *         description: Ressource non trouvée
  */
 app.get('/chambres', validerQuery(schemaChambreGet), async (req, res) => {
-    const { hotel, capacite, categorie, prixMax, date_debut, date_fin } = req.queryValide;
+    const { hotel, capacite, prix_max, categorie, date_debut, date_fin } = req.queryValide;
     const where = {};
-    // 2. On écrit dans les colonnes exactes attendues par Prisma
-    if (hotel) {where.hotelId = Number(hotel); }
-    if (capacite) { where.capacite = { gte: Number(capacite) };}
-    if (categorie) {where.categorie = categorie;}
-    if (prixMax) {where.prix_nuit = { lte: Number(prixMax) }; }
-    // Le filtre des dates
+    if (hotel) where.hotelId = hotel;
+    if (capacite) where.capacite = { gte: capacite };
+    if (prix_max) where.prixNuit = { lte: prix_max };
+    if (categorie) where.categorie = categorie;
     if (date_debut && date_fin) {
         where.Reservation = {
             none: {
                 statut: 'confirmee',
-                dateArrivee: { lt: new Date(date_fin) },
-                dateDepart: { gt: new Date(date_debut) }       
+                dateArrivee: { lt: date_fin },
+                dateDepart: { gt: date_debut }
             }
-        }   
-    }   
-    const chambres = await prisma.chambres.findMany({
-        where: where,
-        orderBy: { id: 'asc' }
-    });
-
-    res.json(chambres);
+        };
+    }
+    res.json(await prisma.chambres.findMany({ where, orderBy: { id: 'asc' } }));
 });
 /**
  * @openapi
@@ -251,20 +244,22 @@ app.get('/hotels/:id/chambres', async (req,res) =>{
 });
 /**
  * @openapi
- * /voyageur/me:
+ * /voyageurs/me:
  *   get:
- *     summary: Récupérer les informations du voyageur connecté
+ *     summary: Profil du voyageur connecté
  *     tags:
- *       - voyageur
+ *       - Voyageurs
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Succès
+ *         description: Profil (id, role, email, nom, prenom, telephone)
  *       401:
- *         description: Non autorisé
+ *         description: Jeton absent ou invalide
+ *       403:
+ *         description: Accès refusé (réservé au rôle voyageur)
  *       404:
- *         description: Voyageur non trouvé
+ *         description: Compte non trouvé
  */
 app.get('/voyageur/me', authentifier,exigeRole('voyageur'), async (req, res) => {
     const moi = await prisma.comptes.findUnique({
@@ -319,7 +314,7 @@ app.get('/reservations/mine', authentifier, exigeRole('voyageur'), async (req, r
  */
 app.get('/reservations/received', authentifier, exigeRole('hotelier'), async (req, res) => {
     const reservations = await prisma.reservations.findMany({
-        where: { chambre: { hotelId: req.utilisateur.hotelId } },
+        where: { Chambres: { hotelId: req.utilisateur.hotelId } },
         orderBy: { dateArrivee: 'asc' }
     });
     if(reservations.length === 0){
@@ -332,79 +327,86 @@ app.get('/reservations/received', authentifier, exigeRole('hotelier'), async (re
  * @openapi
  * /auth/register:
  *   post:
- *     summary: Enregistrer un nouvel utilisateur
- *     tags :
- *        - connexion/insciption
+ *     summary: Créer un compte voyageur
+ *     tags:
+ *       - Auth
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [email, motDePasse, nom, prenom]
  *             properties:
  *               email:
  *                 type: string
- *                 description: Email de l'utilisateur
+ *                 format: email
+ *                 example: a.morel@mail.example
  *               motDePasse:
  *                 type: string
- *                 description: Mot de passe de l'utilisateur
+ *                 minLength: 6
+ *                 example: motdepasse123
  *               nom:
  *                 type: string
- *                 description: Nom de l'utilisateur
+ *                 example: Morel
  *               prenom:
  *                 type: string
- *                 description: Prénom de l'utilisateur
+ *                 example: Alice
  *               telephone:
  *                 type: string
- *                 description: Numéro de téléphone de l'utilisateur (optionnel)
+ *                 example: "0611223344"
  *               note:
  *                 type: string
- *                 description: Note de l'utilisateur (optionnel)
  *     responses:
  *       201:
- *         description: Création réussie
+ *         description: Compte créé (le mot de passe n'est jamais renvoyé)
  *       400:
- *         description: Données invalides
+ *         description: Corps invalide (tableau erreurs)
  *       409:
  *         description: Email déjà utilisé
  */
-app.post('/auth/register', validerCorps(schemaInscription), async(req, res) =>{
-    const { email,motDePasse, nom, prenom, telephone, note} = req.body;
-    const compte = await prisma.comptes.create({
-        data:{email, motDePasse: await bcrypt.hash(motDePasse, 10), nom, prenom, telephone, note, role: 'voyageur'},
-        select: {id: true, email: true, nom: true, prenom: true, telephone: true, note: true }
-    })
-    res.status(201).json(compte)
-}  )
+app.post('/auth/register', validerCorps(schemaInscription), async (req, res) => {
+    try {
+        const { email, motDePasse, nom, prenom, telephone, note } = req.body;
+        const compte = await prisma.comptes.create({
+            data: { email, motDePasse: await bcrypt.hash(motDePasse, 10), nom, prenom, telephone, note, role: 'voyageur' },
+            select: { id: true, email: true, nom: true, prenom: true, telephone: true, note: true }
+        });
+        res.status(201).json(compte);
+    } catch (erreur) {
+            return res.status(409).json({ erreur: 'email déjà utilisé' });
+    }
+});
 /**
  * @openapi
  * /auth/login:
  *   post:
- *     summary: Se connecter à un compte existant
- *     tags :
- *        - connexion/insciption
+ *     summary: Se connecter et obtenir un jeton JWT
+ *     tags:
+ *       - Auth
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [email, motDePasse]
  *             properties:
  *               email:
  *                 type: string
- *                 description: Email de l'utilisateur
+ *                 format: email
+ *                 example: a.morel@mail.example
  *               motDePasse:
  *                 type: string
- *                 description: Mot de passe de l'utilisateur
+ *                 minLength: 6
+ *                 example: motdepasse123
  *     responses:
  *       200:
- *         description: Connexion réussie (renvoie le token JWT)
+ *         description: Connexion réussie, renvoie { token }
  *       400:
- *         description: Données invalides (champs manquants)
+ *         description: Corps invalide (tableau erreurs)
  *       401:
- *         description: Identifiants incorrects (email ou mot de passe erroné)
- *       500:
- *         description: Erreur serveur
+ *         description: Identifiants invalides
  */
 app.post('/auth/login',validerCorps(schemaConnexion), async (req, res) => {
     const { email, motDePasse } = req.body;
@@ -426,16 +428,16 @@ app.post('/auth/login',validerCorps(schemaConnexion), async (req, res) => {
  * @openapi
  * /auth/logout:
  *   post:
- *     summary: Se déconnecter de l'application
+ *     summary: Se déconnecter
  *     tags:
- *       - connexion/insciption
+ *       - Auth
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       204:
- *         description: Déconnexion réussie (aucun contenu renvoyé)
+ *         description: Déconnexion réussie (aucun contenu)
  *       401:
- *         description: Non autorisé (token manquant ou invalide)
+ *         description: Jeton absent ou invalide
  */
 app.post('/auth/logout', authentifier, (req, res) => {
     res.status(204).end();
@@ -489,20 +491,60 @@ app.post('/auth/logout', authentifier, (req, res) => {
 app.post('/chambres', authentifier, exigeRole('hotelier'), validerCorps(schemaChambre), async (req, res) => {
     try {
         const newChambre = await prisma.chambres.create({
-            data: {...req.body,}
+            data: { ...req.body, hotelId: req.utilisateur.hotelId }
         });
         res.status(201).json(newChambre);
     } catch (erreur) {
         res.status(400).json({ erreur: erreur.message });
     }
 });
-
+/**
+ * @openapi
+ * /reservation:
+ *   post:
+ *     summary: Créer une nouvelle réservation
+ *     tags:
+ *       - reservation
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               chambreId:
+ *                 type: integer
+ *                 description: ID de la chambre réservée
+ *               dateArrivee:
+ *                 type: string
+ *                 format: date
+ *                 description: Date d'arrivée (ex YYYY-MM-DD)
+ *               dateDepart:
+ *                 type: string
+ *                 format: date
+ *                 description: Date de départ (ex YYYY-MM-DD)
+ *               nbPersonnes:
+ *                 type: integer
+ *                 description: Nombre de voyageurs pour cette réservation
+ *               demandeSpecial:
+ *                 type: string
+ *                 description: Demandes particulières (optionnel)
+ *     responses:
+ *       201:
+ *         description: Réservation créée avec succès
+ *       400:
+ *         description: Données invalides
+ *       401:
+ *         description: Non autorisé (token manquant ou invalide)
+ */
 app.post('/reservation', authentifier, exigeRole('voyageur'), validerCorps(schemaReservation), async (req, res) => {
     try {
         const { chambreId, dateArrivee, dateDepart, nbPersonnes, demandeSpecial } = req.body;
     
         const nouvelleReservation = await prisma.reservations.create({
-            data: {voyageurId: req.utilisateur.id,chambreId,dateArrivee, dateDepart,nbPersonnes,demandeSpecial: demandeSpecial || null,statut: 'en_attente'}
+            data: {voyageurId: req.utilisateur.id,chambreId,dateArrivee, dateDepart,nbPersonnes,demandeSpecial: demandeSpecial || null, statut: 'en_attente'}
         });
         res.status(201).json(nouvelleReservation);
     } catch (erreur) {
@@ -511,6 +553,62 @@ app.post('/reservation', authentifier, exigeRole('voyageur'), validerCorps(schem
 });
 
 // Patch //
+/**
+ * @openapi
+ * /chambres/{id}:
+ *   patch:
+ *     summary: Modifier partiellement une chambre existante
+ *     tags:
+ *       - Chambres
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la chambre à modifier
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               hotelId:
+ *                 type: integer
+ *                 description: ID de l'hôtel (optionnel)
+ *               numero:
+ *                 type: integer
+ *                 description: Numéro de la chambre (optionnel)
+ *               categorie:
+ *                 type: string
+ *                 description: Catégorie de la chambre (optionnel)
+ *               capacite:
+ *                 type: integer
+ *                 description: Capacité maximale (optionnel)
+ *               prixNuit:
+ *                 type: integer
+ *                 description: Prix de la nuit (optionnel)
+ *               description:
+ *                 type: string
+ *                 description: Description détaillée (optionnel)
+ *               disponible:
+ *                 type: integer
+ *                 description: 1 si disponible, 0 sinon (optionnel)
+ *     responses:
+ *       200:
+ *         description: Chambre modifiée avec succès
+ *       400:
+ *         description: Données invalides
+ *       401:
+ *         description: Non autorisé (token manquant ou invalide)
+ *       403:
+ *         description: Accès refusé (la chambre ne vous appartient pas)
+ *       404:
+ *         description: Chambre non trouvée
+ */
 app.patch('/chambres/:id', authentifier, exigeRole('hotelier'), validerCorps(schemaChambreModif), async (req, res) => {
     try {
         // 1. P4a : Vérifier si la chambre existe (404 en premier)
@@ -535,7 +633,41 @@ app.patch('/chambres/:id', authentifier, exigeRole('hotelier'), validerCorps(sch
         res.status(400).json({ erreur: erreur.message });
     }
 });
-
+/**
+ * @openapi
+ * /voyageurs/me:
+ *   patch:
+ *     summary: Modifier le profil du voyageur connecté
+ *     tags:
+ *       - Voyageurs
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nom:
+ *                 type: string
+ *                 example: Morel
+ *               prenom:
+ *                 type: string
+ *                 example: Alice
+ *               telephone:
+ *                 type: string
+ *                 example: "0611223344"
+ *     responses:
+ *       200:
+ *         description: Profil modifié (id, email, nom, prenom, telephone)
+ *       400:
+ *         description: Corps invalide (tableau erreurs)
+ *       401:
+ *         description: Jeton absent ou invalide
+ *       403:
+ *         description: Accès refusé (réservé au rôle voyageur)
+ */
 app.patch('/voyageur/me', authentifier, exigeRole('voyageur'), validerCorps(schemaModifCompte), async (req, res) => {
     try {
         const donneesAModifier = { ...req.body };
@@ -545,7 +677,8 @@ app.patch('/voyageur/me', authentifier, exigeRole('voyageur'), validerCorps(sche
 
         const upVoyageur = await prisma.comptes.update({
             where: { id: req.utilisateur.id },
-            data: donneesAModifier
+            data: donneesAModifier,
+            select: { id: true, email: true, nom: true, prenom: true, telephone: true }
         });
         res.status(200).json(upVoyageur);
     } catch (erreur) {
@@ -553,27 +686,62 @@ app.patch('/voyageur/me', authentifier, exigeRole('voyageur'), validerCorps(sche
     }
 });
 const TRANSITIONS_AUTORISEES = {
-    en_attente: ['confirmee', 'refusee'],
-    confirmee: ['annulee', 'terminee'],
+    en_attente: ['confirmee', 'refusee', 'annulee'],
+    confirmee: ['annulee'],
     refusee: [],
-    annulee: [],
-    terminee: []
-
+    annulee: []
 };
 function transitionValide(statutActuel, statutVoulu) {
  return (TRANSITIONS_AUTORISEES[statutActuel] || []).includes(statutVoulu);
 }
-
-app.patch('/reservations/:id', authentifier, exigeRole('hotelier'), async (req, res) => {
+/**
+ * @openapi
+ * /reservations/{id}:
+ *   patch:
+ *     summary: Modifier le statut d'une réservation
+ *     tags:
+ *       - reservation
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la réservation à modifier
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               statut:
+ *                 type: string
+ *                 description: Nouveau statut de la réservation
+ *     responses:
+ *       200:
+ *         description: Réservation modifiée avec succès
+ *       400:
+ *         description: Données invalides ou transition de statut non autorisée
+ *       401:
+ *         description: Non autorisé (token manquant ou invalide)
+ *       403:
+ *         description: Accès refusé (cette réservation ne concerne pas votre hôtel)
+ *       404:
+ *         description: Réservation non trouvée
+ */
+app.patch('/reservations/:id', authentifier, exigeRole('hotelier'), validerCorps(schemaStatutReservation), async (req, res) => {
     try {
         const reservationExistante = await prisma.reservations.findUnique({
             where: { id: Number(req.params.id) },
-            include: { chambre: true }
+            include: { Chambres: true }
         });
         if (!reservationExistante) {
             return res.status(404).json({ erreur: 'Réservation non trouvée' });
         }
-        if (reservationExistante.chambre.hotelId !== req.utilisateur.hotelId) {
+        if (reservationExistante.Chambres.hotelId !== req.utilisateur.hotelId) {
             return res.status(403).json({ erreur: 'Accès refusé : cette réservation ne vous appartient pas' });
         }
         if (!transitionValide(reservationExistante.statut, req.body.statut)) {
@@ -591,7 +759,34 @@ app.patch('/reservations/:id', authentifier, exigeRole('hotelier'), async (req, 
 
 
 // DELETE //
-
+/**
+ * @openapi
+ * /chambres/{id}:
+ *   delete:
+ *     summary: Supprimer une chambre en fonction de son ID
+ *     tags:
+ *       - Chambres
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la chambre
+ *     responses:
+ *       204:
+ *         description: Chambre supprimée avec succès (aucun contenu renvoyé)
+ *       400:
+ *         description: ID invalide
+ *       401:
+ *         description: Non autorisé (token manquant ou invalide)
+ *       403:
+ *         description: Accès refusé (cette chambre ne vous appartient pas)
+ *       404:
+ *         description: Chambre non trouvée
+ */
 app.delete('/chambres/:id', authentifier,exigeRole( 'hotelier'), async (req, res) => {
     try {
         // 1. P4a : Vérifier si la chambre existe (404 en premier)
@@ -613,6 +808,34 @@ app.delete('/chambres/:id', authentifier,exigeRole( 'hotelier'), async (req, res
         res.status(400).json({ erreur: erreur.message });
     }
 });
+/**
+ * @openapi
+ * /reservation/{id}:
+ *   delete:
+ *     summary: Supprimer une réservation en fonction de son ID
+ *     tags:
+ *       - reservation
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la chambre
+ *     responses:
+ *       204:
+ *         description: reservation supprimée avec succès (aucun contenu renvoyé)
+ *       400:
+ *         description: ID invalide
+ *       401:
+ *         description: Non autorisé (token manquant ou invalide)
+ *       403:
+ *         description: Accès refusé (cette reservation ne vous appartient pas)
+ *       404:
+ *         description: reservaiton non trouvée
+ */
 app.delete('/reservations/:id', authentifier, exigeRole('voyageur'), async (req, res) => {
     try {
         const reservationExistante = await prisma.reservations.findUnique({
