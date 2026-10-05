@@ -22,14 +22,25 @@ describe('GET /chambre', () => {
         });
     })
     it('GET /chambres?capacite', async () => {
+     // When
       const capacite = 2;
-
       const res = await request(app).get(`/chambres?capacite=${capacite}`);
 
+      // Then
       expect(res.status).toBe(200);
 
       res.body.forEach(chambre => {
         expect(chambre.capacite).toBeGreaterThanOrEqual(capacite);
+      });
+    });
+    it('GET /chambres?prix_max ' , async () => {
+      const prixMax = 70;
+      const res = await request(app).get(`/chambres?prix_max=${prixMax}`);
+
+      expect(res.status).toBe(200);
+
+      res.body.forEach(chambre => {
+        expect(chambre.prix).toBeLessThanOrEqual(prixMax);
       });
     });
     it('GET /chambres/:id renvoie 400 si l\'ID est invalide', async () => {
