@@ -873,3 +873,4 @@ const spec = swaggerJsdoc({
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(spec));
 
 export default app;
+export { prisma };

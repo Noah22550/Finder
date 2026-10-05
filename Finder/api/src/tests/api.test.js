@@ -1,6 +1,8 @@
 import request from 'supertest';
 import app from '../app.js';
-import { expect } from 'vitest';
+import { expect, describe, it, vi, afterEach } from 'vitest';
+import app, { prisma } from '../app.js';
+
 
 describe('GET /chambre', () => {
 
@@ -58,4 +60,13 @@ describe('GET /chambre', () => {
 
         expect(res.status).toBe(404);
     });
+});
+describe('DELETE /chambres/:id', () => {
+  it('utiliser un mock pour DELETE sans toucher la BDD', async () => {
+
+    prisma.chambres.delete.mockResolvedValue({ id: 10, nom: 'Suite' });
+    await request(app).delete('/chambres/10');
+    expect(prisma.chambres.delete).toHaveBeenCalledWith({ where: { id: 10 } });
+
+  });
 });
