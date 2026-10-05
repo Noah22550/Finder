@@ -2,7 +2,7 @@ import request from 'supertest';
 import app from '../app.js';
 import { expect, describe, it, vi, afterEach } from 'vitest';
 import app, { prisma } from '../app.js';
-
+import jwt from 'jsonwebtoken';
 
 describe('GET /chambre', () => {
 
@@ -42,9 +42,10 @@ describe('GET /chambre', () => {
       expect(res.status).toBe(200);
 
       res.body.forEach(chambre => {
-        expect(chambre.prix).toBeLessThanOrEqual(prixMax);
+        expect(chambre.prixNuit).toBeLessThanOrEqual(prixMax);
       });
     });
+
     it('GET /chambres/:id renvoie 400 si l\'ID est invalide', async () => {
         const id = 'abc';
 
@@ -62,11 +63,33 @@ describe('GET /chambre', () => {
     });
 });
 describe('DELETE /chambres/:id', () => {
-  it('utiliser un mock pour DELETE sans toucher la BDD', async () => {
+  afterEach(() => {
+    vi.restoreAllMocks(); // Nettoyage de nos espions Prisma
+  });
 
-    prisma.chambres.delete.mockResolvedValue({ id: 10, nom: 'Suite' });
-    await request(app).delete('/chambres/10');
-    expect(prisma.chambres.delete).toHaveBeenCalledWith({ where: { id: 10 } });
+it('utiliser un mock pour DELETE sans toucher la BDD', async () => {
+    process.env.JWT_SECRET = 'secret_de_test';
 
+    const fauxToken = jwt.sign(
+      { id: 99, role: 'hotelier', hotelId: 42 },
+      process.env.JWT_SECRET
+    );
+    vi.spyOn(prisma.chambres, 'findUnique').mockResolvedValue({ 
+      id: 10, 
+      nom: 'Suite',
+      hotelId: 42 // 👈 Correspond au token !
+    });
+
+    const deleteSpy = vi.spyOn(prisma.chambres, 'delete').mockResolvedValue({ 
+      id: 10, 
+      nom: 'Suite' 
+    });
+
+    
+    const res = await request(app)
+      .delete('/chambres/10')
+      .set('Authorization', `Bearer ${fauxToken}`);
+    expect(res.status).toBe(204);
+    expect(deleteSpy).toHaveBeenCalledWith({ where: { id: 10 } });
   });
 });
