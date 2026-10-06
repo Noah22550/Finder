@@ -4,6 +4,11 @@ import { expect, describe, it, vi, afterEach } from 'vitest';
 import app, { prisma } from '../app.js';
 import jwt from 'jsonwebtoken';
 
+
+afterAll(async () => {
+    await prisma.$disconnect();
+});
+
 describe('GET /chambre', () => {
 
    it('GET /chambres', async () => {
@@ -45,6 +50,15 @@ describe('GET /chambre', () => {
         expect(chambre.prixNuit).toBeLessThanOrEqual(prixMax);
       });
     });
+    it('GET /chambre?capcite', async() => {
+      const categorie = "suite"
+      const res = await request(app).get(`/chambres?categorie=${categorie}`)
+      expect(res.status).toBe(200)
+
+      res.body.forEach(chambre => {
+        expect(chambre.categorie).toBe(categorie);
+      });
+    })
 
     it('GET /chambres/:id renvoie 400 si l\'ID est invalide', async () => {
         const id = 'abc';
@@ -72,23 +86,24 @@ it('utiliser un mock pour DELETE sans toucher la BDD', async () => {
 
     const fauxToken = jwt.sign(
       { id: 99, role: 'hotelier', hotelId: 42 },
+      // id 99 = id du compte de l'hotelier
       process.env.JWT_SECRET
     );
+    //SpyOn = when de Java
     vi.spyOn(prisma.chambres, 'findUnique').mockResolvedValue({ 
+      //id corespondant la chambre
       id: 10, 
       nom: 'Suite',
-      hotelId: 42 // 👈 Correspond au token !
+      hotelId: 42 // Correspond au token !
     });
 
     const deleteSpy = vi.spyOn(prisma.chambres, 'delete').mockResolvedValue({ 
+      //pas hotelId car déjà récup en haut
       id: 10, 
       nom: 'Suite' 
     });
+    const res = await request(app).delete('/chambres/10').set('Authorization', `Bearer ${fauxToken}`);
 
-    
-    const res = await request(app)
-      .delete('/chambres/10')
-      .set('Authorization', `Bearer ${fauxToken}`);
     expect(res.status).toBe(204);
     expect(deleteSpy).toHaveBeenCalledWith({ where: { id: 10 } });
   });
