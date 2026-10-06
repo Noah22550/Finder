@@ -15,13 +15,14 @@ Règle : relue au début de chaque séance ; chaque amendement est daté dans le
 [X] `GET /chambres?prix_max=90` -> 200, 12 chambres ; sans critère, 32
 
 ## Étapes 2 à 8 - déclarées, non franchies
-[X] E2 Base MySQL via Prisma : schéma, migration, seed du kit -> tables visibles dans Adminer
-[X] E3 Recherche de chambres disponibles -> `GET /chambres?...` filtre
-[X] E4 Inscription, connexion JWT 24 h, écritures protégées -> sans jeton 401, mauvais rôle 403
-[X] E5 Validation Zod [ACCEPTABLE] -> corps invalide 400, jamais 500
-[X] E6 Réservations et statuts -> `en_attente`, `confirmee`, `refusee`, `annulee`
-[ ] E7 Documentation Swagger de toutes les routes -> `/docs` les affiche toutes
-[ ] E8 Tests et recette -> `npm test` passe, TA-001 à TA-010
+[x] E2 Base MySQL via Prisma : schéma, migration, seed du kit -> tables visibles dans Adminer
+[x] E3 Recherche de chambres disponibles -> `GET /chambres?...` filtre
+[x] E4 Inscription, connexion JWT 24 h, écritures protégées -> sans jeton 401, mauvais rôle 403
+[x] E5 Validation Zod [ACCEPTABLE] -> corps invalide 400, jamais 500
+[x] E6 Réservations et statuts -> `en_attente`, `confirmee`, `refusee`, `annulee`
+[x] E7 Documentation Swagger de toutes les routes -> `/docs` les affiche toutes
+[x] E8 Tests et recette -> `npm test` passe, TA-001 à TA-010
+[x] E9 Tests et recette -> `npm test` passe, TA-001 à TA-010
 
 ## Gardes
 [~] Aucun secret dans le dépôt : `.env` est dans `.gitignore`
@@ -33,6 +34,7 @@ NON MESURABLE Temps de réponse de la recherche : pas de jeu de données assez g
 
 ## Journal
 AAAA-MM-JJ ... création v1, étape 1
+2026-10-06 Léa Bertrand: Validation des étapes E2 à E9 suite au déroulement des TA-001 à TA-010.
 
 ---
 

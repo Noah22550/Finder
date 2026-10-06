@@ -58,9 +58,7 @@ describe('reservation', () => {
         //expect([200, 404]).toContain(res.status);
     })
 it('doit renvoyer 404 si la réservation existe pas', async () => {
-        // Mock : On force findUnique à ne rien trouver (null)
         vi.spyOn(prisma.reservations, 'findUnique').mockResolvedValue(null);
-
         const res = await request(app)
             .patch('/reservations/999999')
             .set('Authorization', `Bearer ${tokenHotelier}`)

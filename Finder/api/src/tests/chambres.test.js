@@ -1,9 +1,7 @@
 import request from 'supertest';
-import app from '../app.js';
 import { expect, describe, it, vi, afterEach } from 'vitest';
 import app, { prisma } from '../app.js';
 import jwt from 'jsonwebtoken';
-
 
 afterAll(async () => {
     await prisma.$disconnect();
