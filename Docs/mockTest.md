@@ -1,4 +1,3 @@
-Voici un guide complet en Markdown que tu peux copier-coller dans ton projet (par exemple dans un fichier `TEST_GUIDE.md` ou dans tes notes de cours).
 
 ---
 

@@ -1,12 +1,12 @@
 import request from 'supertest';
-import { expect, describe, it, vi, afterEach, beforeAll } from 'vitest';
+import { expect, describe, it, vi, beforeAll } from 'vitest';
 import app, { prisma } from '../app.js';
 import jwt from 'jsonwebtoken';
 
 let tokenVoyageur;
 let tokenHotelier;
 let idReservationTest;
-// ----------------- OUTILS COMMUNS -----------------
+// ----------------- OUTILS DU TEST -----------------
 
 beforeAll(async () => {
     // Connexion d'un compte voyageur
@@ -24,16 +24,6 @@ beforeAll(async () => {
 afterAll(async () => {
     await prisma.$disconnect();
 });
-
-
-// Corps valide pour POST /reservation
-const corpsReservationValide = {
-  chambreId: 10,
-  dateArrivee: '2026-11-01',
-  dateDepart: '2026-11-05',
-  nbPersonnes: 3,
-  demandeSpecial: 'Lit bébé'
-};
 
 describe('reservation', () => {
 
@@ -57,6 +47,13 @@ describe('reservation', () => {
         expect(res.status).toBe(200);
         //expect([200, 404]).toContain(res.status);
     })
+    it('GET /reservations/received doit renvoyer 403 pour un voyageur', async () => {
+        const res = await request(app)
+            .get('/reservations/received')
+            .set('Authorization', `Bearer ${tokenVoyageur}`);
+
+        expect(res.status).toBe(403);
+    });
 it('doit renvoyer 404 si la réservation existe pas', async () => {
         vi.spyOn(prisma.reservations, 'findUnique').mockResolvedValue(null);
         const res = await request(app)
@@ -87,6 +84,35 @@ it('doit renvoyer 404 si la réservation existe pas', async () => {
         
         expect(res.status).toBe(200);
         expect(res.body.statut).toBe('confirmee'); 
+        vi.restoreAllMocks();
+    });
+
+    it('POST /reservations doit renvoyer 400 si le corps est invalide', async () => {
+        const createSpy = vi.spyOn(prisma.reservations, 'create');
+        const res = await request(app)
+            .post('/reservations')
+            .set('Authorization', `Bearer ${tokenVoyageur}`)
+            .send({ chambreId: 'abc', nbPersonnes: -2 }); // dates manquantes, types invalides
+
+        expect(res.status).toBe(400);
+        expect(res.body.erreurs).toBeDefined();
+        expect(createSpy).not.toHaveBeenCalled(); // Zod bloque avant la BDD
+        vi.restoreAllMocks();
+    });
+
+    it('DELETE /reservations/:id doit renvoyer 403 si la réservation appartient à un autre voyageur', async () => {
+        vi.spyOn(prisma.reservations, 'findUnique').mockResolvedValue({
+            id: 1,
+            voyageurId: -1, // n'est pas l'id du voyageur connecté
+            statut: 'en_attente'
+        });
+        const updateSpy = vi.spyOn(prisma.reservations, 'update');
+        const res = await request(app)
+            .delete('/reservations/1')
+            .set('Authorization', `Bearer ${tokenVoyageur}`);
+
+        expect(res.status).toBe(403);
+        expect(updateSpy).not.toHaveBeenCalled();
         vi.restoreAllMocks();
     });
 })

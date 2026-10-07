@@ -58,6 +58,13 @@ describe('GET /chambre', () => {
       });
     })
 
+    it('GET /chambres renvoie 400 si un filtre est invalide', async () => {
+        const res = await request(app).get('/chambres?categorie=chateau');
+
+        expect(res.status).toBe(400);
+        expect(res.body.erreurs).toBeDefined();
+    });
+
     it('GET /chambres/:id renvoie 400 si l\'ID est invalide', async () => {
         const id = 'abc';
 
@@ -74,6 +81,7 @@ describe('GET /chambre', () => {
         expect(res.status).toBe(404);
     });
 });
+
 describe('DELETE /chambres/:id', () => {
   afterEach(() => {
     vi.restoreAllMocks(); // Nettoyage de nos espions Prisma
@@ -104,5 +112,64 @@ it('utiliser un mock pour DELETE sans toucher la BDD', async () => {
 
     expect(res.status).toBe(204);
     expect(deleteSpy).toHaveBeenCalledWith({ where: { id: 10 } });
+  });
+
+  it('DELETE /chambres/:id renvoie 404 si la chambre n\'existe pas', async () => {
+    process.env.JWT_SECRET = 'secret_de_test';
+    const fauxToken = jwt.sign({ id: 99, role: 'hotelier', hotelId: 42 }, process.env.JWT_SECRET);
+
+    vi.spyOn(prisma.chambres, 'findUnique').mockResolvedValue(null);
+    const deleteSpy = vi.spyOn(prisma.chambres, 'delete');
+
+    const res = await request(app).delete('/chambres/999999').set('Authorization', `Bearer ${fauxToken}`);
+
+    expect(res.status).toBe(404);
+    expect(deleteSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /chambres', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('POST /chambres renvoie 400 si le corps est invalide', async () => {
+    process.env.JWT_SECRET = 'secret_de_test';
+    const fauxToken = jwt.sign({ id: 99, role: 'hotelier', hotelId: 42 }, process.env.JWT_SECRET);
+    const createSpy = vi.spyOn(prisma.chambres, 'create');
+
+    const res = await request(app)
+      .post('/chambres')
+      .set('Authorization', `Bearer ${fauxToken}`)
+      .send({ numero: '12', categorie: 'chateau', capacite: -1 }); // catégorie hors enum, capacité négative, champs manquants
+
+    expect(res.status).toBe(400);
+    expect(res.body.erreurs).toBeDefined();
+    expect(createSpy).not.toHaveBeenCalled(); // Zod bloque avant la BDD
+  });
+});
+
+describe('PATCH /chambres/:id', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('PATCH /chambres/:id renvoie 403 si la chambre appartient à un autre hôtel', async () => {
+    process.env.JWT_SECRET = 'secret_de_test';
+    const fauxToken = jwt.sign({ id: 99, role: 'hotelier', hotelId: 42 }, process.env.JWT_SECRET);
+
+    vi.spyOn(prisma.chambres, 'findUnique').mockResolvedValue({
+      id: 10,
+      hotelId: 7 // différent du hotelId du token (42)
+    });
+    const updateSpy = vi.spyOn(prisma.chambres, 'update');
+
+    const res = await request(app)
+      .patch('/chambres/10')
+      .set('Authorization', `Bearer ${fauxToken}`)
+      .send({ prixNuit: 120 });
+
+    expect(res.status).toBe(403);
+    expect(updateSpy).not.toHaveBeenCalled();
   });
 });
