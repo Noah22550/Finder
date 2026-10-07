@@ -172,4 +172,19 @@ describe('PATCH /chambres/:id', () => {
     expect(res.status).toBe(403);
     expect(updateSpy).not.toHaveBeenCalled();
   });
+  it('doit filtrer les chambres selon les dates de réservation (TA-004)', async () => {
+    // 1. On cherche avec un chevauchement (chambre 4 occupée) -> 31 chambres attendues
+    const resOccuped = await request(app)
+        .get('/chambres?date_debut=2026-10-10&date_fin=2026-10-12');
+    
+    expect(resOccuped.status).toBe(200);
+    expect(resOccuped.body).toHaveLength(31);
+
+    // 2. On décale d'un jour (chambre 4 libérée) -> 32 chambres attendues
+    const resFree = await request(app)
+        .get('/chambres?date_debut=2026-10-11&date_fin=2026-10-13');
+    
+    expect(resFree.status).toBe(200);
+    expect(resFree.body).toHaveLength(32);
+});
 });

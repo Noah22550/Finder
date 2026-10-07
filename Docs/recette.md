@@ -13,4 +13,4 @@ Déroulé des tests d'acceptation par Noah le 2026-10-06.
 | TA-007 | Le voyageur annule sa réservation : statut annulee, la chambre redevient réservable sur la période | OK | 2026-10-06 | Noah |
 | TA-008 | Un voyageur ne peut PAS modifier la chambre d'un hôtelier (403 Forbidden) | OK | 2026-10-06 | Noah |
 | TA-009 | Un hôtelier ne voit que les réservations de SON hôtel (jamais celles de l'Amor s'il gère le Byzance) | OK | 2026-10-06 | Noah |
-| TA-010 | L'endpoint /health renvoie 200 quand tout va bien | OK | 2026-10-06 | Noah |
+| TA-010 |  | OK | 2026-10-06 | Noah |
