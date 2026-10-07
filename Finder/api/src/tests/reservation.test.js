@@ -8,19 +8,11 @@ let tokenHotelier;
 let idReservationTest;
 // ----------------- OUTILS DU TEST -----------------
 
-beforeAll(async () => {
-    // Connexion d'un compte voyageur
-    const resVoyageur = await request(app)
-      .post('/auth/login')
-      .send({ email: 'voyageur@test.fr', motDePasse: '123456' });
-     tokenVoyageur = resVoyageur.body.token;
-
-    // Connexion d'un compte hôtelier
-    const resHotelier = await request(app)
-      .post('/auth/login')
-      .send({ email: 'hotelier@test.fr', motDePasse: '123456' });
-    tokenHotelier = resHotelier.body.token;
-  });
+beforeAll(() => {
+    process.env.JWT_SECRET = 'secret_de_test';
+    tokenVoyageur = jwt.sign({ id: 5, role: 'voyageur' }, process.env.JWT_SECRET);
+    tokenHotelier = jwt.sign({ id: 1, role: 'hotelier', hotelId: 1 }, process.env.JWT_SECRET);
+});
 afterAll(async () => {
     await prisma.$disconnect();
 });

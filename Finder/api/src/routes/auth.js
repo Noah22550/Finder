@@ -153,7 +153,7 @@ router.post('/login',validerCorps(schemaConnexion), async (req, res) => {
  *       401:
  *         description: Jeton absent ou invalide
  */
-router.post('/auth/logout', authentifier, (req, res) => {
+router.post('/logout', authentifier, (req, res) => {
     res.status(204).end();
 });
 
@@ -197,7 +197,7 @@ router.post('/auth/logout', authentifier, (req, res) => {
  *       403:
  *         description: Accès refusé (réservé au rôle voyageur)
  */
-router.patch('/voyageur/me', authentifier, exigeRole('voyageur'), validerCorps(schemaModifCompte), async (req, res) => {
+router.patch('/me', authentifier, exigeRole('voyageur'), validerCorps(schemaModifCompte), async (req, res) => {
     try {
         const donneesAModifier = { ...req.body };
         if (donneesAModifier.motDePasse) {
