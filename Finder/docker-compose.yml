@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # 1. Service pour la base de données MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: finder-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: finder
+      MYSQL_USER: finder_user
+      MYSQL_PASSWORD: finder_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # 2. Service pour votre API Node.js / Finder
+  api:
+    build: .
+    container_name: finder-api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATABASE_URL=mysql://finder_user:finder_password@mysql:3306/finder
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
