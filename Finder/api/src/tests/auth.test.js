@@ -44,7 +44,7 @@ describe('auth', () => {
         expect(contenu.role).toBe('voyageur');
     });
 
-    it('GET /auth/me renvoie 200 et le profil du voyageur connecté', async () => {
+    it('GET /voyageurs/me renvoie 200 et le profil du voyageur connecté', async () => {
         const findSpy = vi.spyOn(prisma.comptes, 'findUnique').mockResolvedValue({
             id: 5,
             role: 'voyageur',
@@ -54,7 +54,7 @@ describe('auth', () => {
         });
 
         const res = await request(app)
-            .get('/auth/me')
+            .get('/voyageurs/me')
             .set('Authorization', `Bearer ${fauxTokenVoyageur}`);
 
         expect(res.status).toBe(200);
@@ -63,7 +63,7 @@ describe('auth', () => {
         expect(findSpy).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 5 } }));
     });
 
-    it('PATCH /auth/me renvoie 200 et le profil modifié', async () => {
+    it('PATCH /voyageurs/me renvoie 200 et le profil modifié', async () => {
         const updateSpy = vi.spyOn(prisma.comptes, 'update').mockResolvedValue({
             id: 5,
             email: 'voyageur@test.fr',
@@ -73,7 +73,7 @@ describe('auth', () => {
         });
 
         const res = await request(app)
-            .patch('/auth/me')
+            .patch('/voyageurs/me')
             .set('Authorization', `Bearer ${fauxTokenVoyageur}`)
             .send({ telephone: '0611223344' });
 
