@@ -30,8 +30,8 @@ export const schemaChambreGet = z.object({
     capacite: z.coerce.number().int().positive().optional(),
     prix_max: z.coerce.number().positive().optional(),
     categorie: z.enum(['simple', 'double', 'familiale', 'suite']).optional(),
-    date_debut: z.coerce.date().optional(),
-    date_fin: z.coerce.date().optional()
+    date_debut: z.string().optional().transform(val => val ? new Date(val) : undefined),
+    date_fin: z.string().optional().transform(val => val ? new Date(val) : undefined)
 });
 export const schemaChambreModif = schemaChambre.partial();
 

@@ -29,7 +29,7 @@ const router = Router();
  *           type: string
  *         description: Catégorie de la chambre
  *       - in: query
- *         name: prixMax
+ *         name: prix_max
  *         schema:
  *           type: number
  *         description: Prix maximum par nuit
@@ -64,8 +64,8 @@ router.get('/', validerQuery(schemaChambreGet), async (req, res) => {
         where.Reservation = {
             none: {
                 statut: 'confirmee',
-                dateArrivee: { lt: date_fin },
-                dateDepart: { gt: date_debut }
+                dateArrivee: { lt: new Date(date_fin) },
+                dateDepart: { gt: new Date(date_debut) }
             }
         };
     }
