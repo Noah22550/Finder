@@ -74,7 +74,7 @@ router.get('/received', authentifier, exigeRole('hotelier'), async (req, res) =>
 
 /**
  * @openapi
- * /reservation:
+ * /reservations:
  *   post:
  *     summary: Créer une nouvelle réservation
  *     tags:
@@ -118,7 +118,7 @@ router.post('/', authentifier, exigeRole('voyageur'), validerCorps(schemaReserva
         const { chambreId, dateArrivee, dateDepart, nbPersonnes, demandeSpecial } = req.body;
     
         const nouvelleReservation = await prisma.reservations.create({
-            data: {voyageurId: req.utilisateur.id,chambreId,dateArrivee, dateDepart,nbPersonnes,demandeSpecial: demandeSpecial || null, statut: 'en_attente'}
+            data: {voyageurId: req.utilisateur.id,chambreId,dateArrivee , dateDepart,nbPersonnes,demandeSpecial: demandeSpecial || null, statut: 'en_attente'}
         });
         res.status(201).json(nouvelleReservation);
     } catch (erreur) {
@@ -191,7 +191,7 @@ router.patch('/:id', authentifier, exigeRole('hotelier'), validerCorps(schemaSta
 
 /**
  * @openapi
- * /reservation/{id}:
+ * /reservations/{id}:
  *   delete:
  *     summary: Supprimer une réservation en fonction de son ID
  *     tags:

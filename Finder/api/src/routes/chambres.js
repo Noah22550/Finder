@@ -2,6 +2,7 @@ import { Router } from 'express';
 import prisma from '../prisma.js'; 
 import { authentifier, exigeRole, validerCorps, validerQuery } from '../middlewares.js'; // <-- Ajout de validerQuery
 import { schemaChambre, schemaChambreModif, schemaChambreGet } from '../schemas.js'; // <-- ../ ici aussi
+import { tr } from 'zod/v4/locales';
 
 const router = Router();
 
@@ -54,22 +55,28 @@ const router = Router();
  *         description: Ressource non trouvée
  */
 router.get('/', validerQuery(schemaChambreGet), async (req, res) => {
-    const { hotel, capacite, prix_max, categorie, date_debut, date_fin } = req.queryValide;
-    const where = {};
-    if (hotel) where.hotelId = hotel;
-    if (capacite) where.capacite = { gte: capacite };
-    if (prix_max) where.prixNuit = { lte: prix_max };
-    if (categorie) where.categorie = categorie;
-    if (date_debut && date_fin) {
-        where.Reservation = {
-            none: {
-                statut: 'confirmee',
-                dateArrivee: { lt: new Date(date_fin) },
-                dateDepart: { gt: new Date(date_debut) }
-            }
-        };
+    try {
+        const { hotel, capacite, prix_max, categorie, date_debut, date_fin } = req.queryValide;
+        const where = {};
+        if (hotel) where.hotelId = hotel;
+        if (capacite) where.capacite = { gte: capacite };
+        if (prix_max) where.prixNuit = { lte: prix_max };
+        if (categorie) where.categorie = categorie;
+        
+        if (date_debut && date_fin) {
+            where.Reservation = {
+                none: {
+                    statut: 'confirmee',
+                    dateArrivee: { lt: new Date(date_fin) },
+                    dateDepart: { gt: new Date(date_debut) }
+                }
+            };
+        }
+        res.json(await prisma.chambres.findMany({ where, orderBy: { id: 'asc' } }));
+    } catch (erreur) {
+        console.error("Erreur GET /chambres :", erreur);
+        res.status(500).json({ erreur: "Une erreur est survenue lors de la recherche des chambres." });
     }
-    res.json(await prisma.chambres.findMany({ where, orderBy: { id: 'asc' } }));
 });
 
 /**
@@ -131,21 +138,27 @@ router.get('/:id', async (req, res) => {
  *               numero:
  *                 type: integer
  *                 description: Numéro de la chambre
+ *                 default: 1
  *               categorie:
  *                 type: string
  *                 description: Catégorie de la chambre (simple, double, familiale, suite)
+ *                 default: simple
  *               capacite:
  *                 type: integer
  *                 description: Quantité maximale de voyageurs dans la chambre
+ *                 default: 2
  *               prixNuit:
  *                 type: integer
  *                 description: Prix de la nuit
+ *                 default: 999
  *               description:
  *                 type: string
  *                 description: Description détaillée de la chambre
+ *                 default: une télé 4K full hd 75 pouces
  *               disponible:
  *                 type: integer
  *                 description: 1 si disponible, 0 sinon
+ *                 default: 1
  *     responses:
  *       201:
  *         description: Chambre créée avec succès

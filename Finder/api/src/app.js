@@ -7,7 +7,7 @@ import chambresRoutes from './routes/chambres.js';
 import hotelsRoutes from './routes/hotel.js';
 import reservationsRoutes from './routes/reservations.js';
 import authRoutes from './routes/auth.js';
-
+import voyageursRoutes from './routes/voyageur.js';
 const app = express();
 
 app.use(express.json());
@@ -15,6 +15,7 @@ app.use('/chambres', chambresRoutes);
 app.use('/hotels', hotelsRoutes);
 app.use('/reservations', reservationsRoutes);
 app.use('/auth', authRoutes);
+app.use('/voyageurs', voyageursRoutes);
 
 const spec = swaggerJsdoc({
  definition: {

@@ -30,8 +30,9 @@ export const schemaChambreGet = z.object({
     capacite: z.coerce.number().int().positive().optional(),
     prix_max: z.coerce.number().positive().optional(),
     categorie: z.enum(['simple', 'double', 'familiale', 'suite']).optional(),
-    date_debut: z.string().optional().transform(val => val ? new Date(val) : undefined),
-    date_fin: z.string().optional().transform(val => val ? new Date(val) : undefined)
+    //on récupère les dates en string et apres on les transforme en Date et on vérifie si ça a le bon resultat sinon on renvoie rien
+    date_debut: z.string().optional().transform(valeur => valeur ? new Date(valeur) : undefined),
+    date_fin: z.string().optional().transform(valeur => valeur ? new Date(valeur) : undefined)
 });
 export const schemaChambreModif = schemaChambre.partial();
 
@@ -43,5 +44,5 @@ export const schemaReservation = z.object({
     demandeSpecial: z.string().optional()
 });
 export const schemaStatutReservation = z.object({
-    statut: z.enum(['confirmee', 'refusee'])
+    statut: z.enum(['confirmee', 'refusee', 'annulee'])
 });
