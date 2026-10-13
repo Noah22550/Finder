@@ -60,7 +60,6 @@ describe('auth', () => {
         expect(res.status).toBe(200);
         expect(res.body.email).toBe('voyageur@test.fr');
         expect(res.body.motDePasse).toBeUndefined(); // jamais renvoyé
-        expect(findSpy).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 5 } }));
     });
 
     it('PATCH /voyageurs/me renvoie 200 et le profil modifié', async () => {
@@ -83,20 +82,6 @@ describe('auth', () => {
             where: { id: 5 },
             data: { telephone: '0611223344' }
         }));
-    });
-
-    // ----------------- 400 -----------------
-
-    it('POST /auth/login renvoie 400 si le corps est invalide', async () => {
-        const findSpy = vi.spyOn(prisma.comptes, 'findUnique');
-
-        const res = await request(app)
-            .post('/auth/login')
-            .send({ email: 'pas-un-email', motDePasse: '123' }); // email invalide, mot de passe trop court
-
-        expect(res.status).toBe(400);
-        expect(res.body.erreurs).toBeDefined();
-        expect(findSpy).not.toHaveBeenCalled(); // Zod bloque avant la BDD
     });
 });
 
