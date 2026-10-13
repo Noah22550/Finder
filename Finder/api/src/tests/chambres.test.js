@@ -212,5 +212,5 @@ describe('PATCH /chambres/:id', () => {
     
     expect(resFree.status).toBe(200);
     expect(resFree.body).toHaveLength(32);
-});
+  });
 });
