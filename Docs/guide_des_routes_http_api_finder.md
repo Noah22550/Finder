@@ -28,19 +28,6 @@ Ce document regroupe l'ensemble des routes de l'API **Finder**, les requêtes HT
 | **DELETE** | `/reservations/:id` | `voyageur` (Propriétaire) | *Aucun* (passe le statut à `annulee`) | `200`, `400`, `401`, `403`, `404` |
 | **GET** | `/docs` | Public | Interface Swagger UI | `200` |
 
-### Routes supplémentaires prévues dans le cahier des charges
-
-| Méthode | Route | Niveau / Sprint | Rôle | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| **GET** | `/health` | Minimal (S1 E1) | Public | Renvoie `200` et `{"ok": true}` (Recette `TA-010`) |
-| **POST** | `/auth/refresh` | Avancé (S3 E5) | Cookie `httpOnly` | Renouvelle le token d'accès (1h) sans mot de passe |
-| **GET** | `/me/export` | Avancé (S4 E4) | `voyageur` | Export RGPD des données personnelles (`JSON` ou `?format=csv`, `TA-012`) |
-| **DELETE** | `/me` | Avancé (S4 E4) | `voyageur` | Effacement RGPD du profil et anonymisation des réservations (`TA-013`) |
-| **GET** | `/admin/stats` | Bonus (S4 E7) | `admin` | Statistiques globales anonymisées (`TA-015`) |
-| **GET** | `/admin/stats/hotels` | Bonus (S4 E7) | `admin` | Statistiques par hôtel sans données personnelles |
-
----
-
 ## 2. Requêtes HTTP prêtes à tester
 
 Tu peux copier ce bloc dans un fichier `requetes.http` sur VS Code (avec l'extension *REST Client*) ou utiliser ces exemples dans Postman :
