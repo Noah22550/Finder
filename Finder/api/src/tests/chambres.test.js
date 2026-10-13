@@ -48,7 +48,7 @@ describe('GET /chambre', () => {
         expect(chambre.prixNuit).toBeLessThanOrEqual(prixMax);
       });
     });
-    it('GET /chambre?capcite', async() => {
+    it('GET /chambre?categorie', async() => {
       const categorie = "suite"
       const res = await request(app).get(`/chambres?categorie=${categorie}`)
       expect(res.status).toBe(200)
