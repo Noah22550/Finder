@@ -3,8 +3,8 @@ import { Router } from 'express';
 import prisma from '../prisma.js'; // Le point d'exclamation sur le chemin (../)
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { authentifier, exigeRole, validerCorps } from '../middlewares.js';
-import { schemaInscription, schemaConnexion, schemaModifCompte } from '../schemas.js';
+import { authentifier,validerCorps } from '../middlewares.js';
+import { schemaInscription, schemaConnexion} from '../schemas.js';
 
 const router = Router();
 
