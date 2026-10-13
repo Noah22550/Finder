@@ -132,7 +132,33 @@ describe('POST /chambres', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
+  it('POST /chambres renvoie 201 si la chambre est créée', async () => {
+    process.env.JWT_SECRET = 'secret_de_test';
+    const fauxToken = jwt.sign({ id: 99, role: 'hotelier', hotelId: 2 }, process.env.JWT_SECRET);
 
+    const nouvChambre = {
+      hotelId: 2,                        
+      numero: "808",                             
+      categorie: "simple",                       
+      capacite: 2,                                
+      prixNuit: 34,                               
+      description: "une télé 4K full hd 75 pouces", 
+      disponible: true                               
+    };
+
+    const creerSpy = vi.spyOn(prisma.chambres, 'create').mockResolvedValue({
+      id: 74,
+      ...nouvChambre
+    });
+
+    const res = await request(app)
+      .post('/chambres')
+      .set('Authorization', `Bearer ${fauxToken}`)
+      .send(nouvChambre);
+
+    expect(res.status).toBe(201);
+    expect(creerSpy).toHaveBeenCalled();
+  });
   it('POST /chambres renvoie 400 si le corps est invalide', async () => {
     process.env.JWT_SECRET = 'secret_de_test';
     const fauxToken = jwt.sign({ id: 99, role: 'hotelier', hotelId: 42 }, process.env.JWT_SECRET);

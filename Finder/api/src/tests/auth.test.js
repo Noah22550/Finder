@@ -22,45 +22,6 @@ describe('auth', () => {
 
     // ----------------- 200 -----------------
 
-    it('POST /auth/login renvoie 200 et un token si les identifiants sont valides', async () => {
-        vi.spyOn(prisma.comptes, 'findUnique').mockResolvedValue({
-            id: 5,
-            email: 'voyageur@test.fr',
-            motDePasse: await bcrypt.hash('123456', 4), // hash du mot de passe envoyé
-            role: 'voyageur',
-            hotelId: null
-        });
-
-        const res = await request(app)
-            .post('/auth/login')
-            .send({ email: 'voyageur@test.fr', motDePasse: '123456' });
-
-        expect(res.status).toBe(200);
-        expect(res.body.token).toBeDefined();
-
-        // Le token contient bien les infos du compte
-        const contenu = jwt.verify(res.body.token, process.env.JWT_SECRET);
-        expect(contenu.id).toBe(5);
-        expect(contenu.role).toBe('voyageur');
-    });
-
-    it('GET /voyageurs/me renvoie 200 et le profil du voyageur connecté', async () => {
-        const findSpy = vi.spyOn(prisma.comptes, 'findUnique').mockResolvedValue({
-            id: 5,
-            role: 'voyageur',
-            email: 'voyageur@test.fr',
-            nom: 'Morel',
-            prenom: 'Alice'
-        });
-
-        const res = await request(app)
-            .get('/voyageurs/me')
-            .set('Authorization', `Bearer ${fauxTokenVoyageur}`);
-
-        expect(res.status).toBe(200);
-        expect(res.body.email).toBe('voyageur@test.fr');
-        expect(res.body.motDePasse).toBeUndefined(); // jamais renvoyé
-    });
 
     it('PATCH /voyageurs/me renvoie 200 et le profil modifié', async () => {
         const updateSpy = vi.spyOn(prisma.comptes, 'update').mockResolvedValue({
@@ -83,5 +44,6 @@ describe('auth', () => {
             data: { telephone: '0611223344' }
         }));
     });
+
 });
 

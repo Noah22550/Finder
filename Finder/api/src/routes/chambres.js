@@ -136,7 +136,7 @@ router.get('/:id', async (req, res) => {
  *                 type: integer
  *                 description: ID de l'hôtel concerné
  *               numero:
- *                 type: integer
+ *                 type: string
  *                 description: Numéro de la chambre
  *                 default: 1
  *               categorie:
