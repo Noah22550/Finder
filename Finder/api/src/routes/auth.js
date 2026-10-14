@@ -84,7 +84,7 @@ router.post('/register', validerCorps(schemaInscription), async (req, res) => {
  *               motDePasse:
  *                 type: string
  *                 minLength: 6
- *                 example: testTaMere
+ *                 example: motdepasse123
  *     responses:
  *       200:
  *         description: Connexion réussie, renvoie { token }
