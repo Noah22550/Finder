@@ -12,3 +12,12 @@ docs/ spec.md, la spec du sprint
 api/finder-data/ le kit, jamais modifié
 api/ l'API Express
 api/src/server.js le serveur et ses routes
+
+### Démarrer le frontend
+
+Pour lancer l'interface utilisateur, ouvrez un nouveau terminal et exécutez :
+
+```bash
+cd front
+npm install
+npm run dev
