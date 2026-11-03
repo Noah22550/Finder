@@ -1,14 +1,15 @@
-export default function ListeChambres({ chambres }) {
-if (chambres.length === 0) {
-return <p>Aucune chambre à afficher.</p>;
-}
-return (
-  <ul className="liste-chambres">
-  {chambres.map(chambre => (
-    <li key={chambre.id}>
-    <strong>{chambre.nom}</strong> ({chambre.numero})
-    </li>
-  ))}
-  </ul>
+export default function ListeChambres({ chambres, onChoix }) {
+  if (chambres.length === 0) {
+    return <p>Aucune chambre</p>;
+  }
+
+  return (
+    <ul>
+      {chambres.map(chambre => (
+        <li key={chambre.id} onClick={() => onChoix(chambre)}>
+          {chambre.numero} - {chambre.categorie}, {chambre.capacite} pers, {chambre.prixNuit} €
+        </li>
+      ))}
+    </ul>
   );
 }

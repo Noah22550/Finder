@@ -1,6 +1,7 @@
 import FicheHotel from './composants/FicheHotel';
 import FicheChambre from './composants/FicheChambre';
 import ListeChambres from './composants/ListeChambres';
+import { useState } from 'react'; 
 
 const hotel = {
   id: 1,
@@ -11,37 +12,37 @@ const hotel = {
   description: "Hôtel de charme sur le vieux port offrant une vue imprenable sur les tours."
 };
 
-// Données corrigées pour correspondre exactement à l'API (GET /chambres/1)
 const listeChambres = [
-  {
-    id: 1,
-    nom: "Chambre 101",
-    numero: "101",
-    categorie: "simple",
-    prixNuit: 69
-  },
-  {
-    id: 2,
-    nom: "Chambre 102",
-    numero: "102",
-    categorie: "double",
-    prixNuit: 99
-  }
+  { id: 1, hotelId: 1, numero: "101", categorie: "simple", capacite: 1, prixNuit: 69 },
+  { id: 2, hotelId: 1, numero: "102", categorie: "simple", capacite: 1, prixNuit: 69 },
+  { id: 3, hotelId: 1, numero: "103", categorie: "simple", capacite: 1, prixNuit: 69 },
+  { id: 4, hotelId: 1, numero: "104", categorie: "double", capacite: 2, prixNuit: 95 },
+  { id: 5, hotelId: 1, numero: "105", categorie: "double", capacite: 2, prixNuit: 95 },
+  { id: 6, hotelId: 1, numero: "206", categorie: "double", capacite: 2, prixNuit: 95 },
+  { id: 7, hotelId: 1, numero: "207", categorie: "double", capacite: 2, prixNuit: 95 },
+  { id: 8, hotelId: 1, numero: "208", categorie: "double", capacite: 2, prixNuit: 95 },
+  { id: 9, hotelId: 1, numero: "209", categorie: "double", capacite: 2, prixNuit: 95 },
+  { id: 10, hotelId: 1, numero: "210", categorie: "familiale", capacite: 4, prixNuit: 149 },
+  { id: 11, hotelId: 1, numero: "211", categorie: "familiale", capacite: 4, prixNuit: 149 },
+  { id: 12, hotelId: 1, numero: "212", categorie: "suite", capacite: 2, prixNuit: 189 }
 ];
 
-
-
-const chambres = [...listeChambres];
-
 export default function App() {
+  const [selection, setSelection] = useState(null); 
+  const [chambres] = useState(listeChambres); 
   return (
     <div>
-      <h1>FINDER</h1>
-      <FicheHotel Hotel={hotel} />
-      <FicheChambre chambre={listeChambres[0]} hotel={hotel} />
-      <FicheChambre chambre={listeChambres[1]} hotel={hotel} />
-      <ListeChambres chambres={chambres} />
+      <h1>Finder</h1>
+      {chambres.length > 0 && (
+        <p>{chambres.length} chambres</p>
+      )}
+      <ListeChambres chambres={chambres} onChoix={setSelection} /> 
+      {selection && (
+        <div>
+          <FicheChambre chambre={selection} hotel={hotel} />
+          <button onClick={() => setSelection(null)}>Fermer</button> 
+        </div>
+      )} 
     </div>
-  
   );
 }
