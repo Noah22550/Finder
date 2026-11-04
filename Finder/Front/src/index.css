@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+
+@theme {
+  /* Ajoute de nouvelles couleurs personnalisées à Tailwind */
+  --color-finder-primary: #0369a1; /* Vous pourrez utiliser bg-finder-primary ou text-finder-primary */
+  --color-finder-accent: #f59e0b;
+  
+  /* Définit la police globale */
+  --font-sans: 'Inter', sans-serif;
+}
+
+@layer base {
+  /* Style global de la page entière */
+  body {
+    background-color: #A5E1FA; /* Gris très clair pour le fond de l'app */
+    color: black;
+  }
+  
+  /* Personnalisation de la barre de défilement (scrollbar) */
+
+}

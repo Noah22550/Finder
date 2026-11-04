@@ -32,17 +32,20 @@ export default function App() {
   const [chambres] = useState(listeChambres); 
   return (
     <div>
-      <h1>Finder</h1>
+      <center>
+      <h1 className="text-6xl font-bold text-finder-primary">Finder</h1>
       {chambres.length > 0 && (
-        <p>{chambres.length} chambres</p>
+
+        <p className="text-lg text-finder-primary underline" > {chambres.length} chambres disponibles</p>
       )}
       <ListeChambres chambres={chambres} onChoix={setSelection} /> 
       {selection && (
         <div>
           <FicheChambre chambre={selection} hotel={hotel} />
-          <button onClick={() => setSelection(null)}>Fermer</button> 
+          <button className="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold" onClick={() => setSelection(null)}>Fermer</button> 
         </div>
       )} 
+    </center>
     </div>
   );
 }
