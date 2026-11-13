@@ -2,6 +2,7 @@ import FicheHotel from './composants/FicheHotel';
 import Recherche from './pages/recherche';
 import FicheChambre from './composants/FicheChambre';
 import ListeChambres from './composants/ListeChambres';
+//import '@picocss/pico/css/pico.min.css';
 import { useState } from 'react'; 
 
 const hotel = {
@@ -32,20 +33,22 @@ export default function App() {
   const [selection, setSelection] = useState(null); 
   const [chambres] = useState(listeChambres); 
   return (
-    <div className="flex flex-col items-center">
-      <Recherche />
-      <h1 className="text-6xl font-bold text-finder-primary">Finder</h1>
-      {chambres.length > 0 && (
-
-        <p className="text-lg text-finder-primary underline" > {chambres.length} chambres disponibles</p>
-      )}
-      <ListeChambres chambres={chambres} onChoix={setSelection} /> 
-      {selection && (
-        <div>
-          <FicheChambre chambre={selection} hotel={hotel} />
-          <button className="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold" onClick={() => setSelection(null)}>Fermer</button> 
-        </div>
-      )} 
+    <div>
+      <div className="flex flex-col items-center">
+        <h1 className="text-6xl font-bold text-finder-primary">Finder</h1>
+        <Recherche />
+        {chambres.length > 0 && (
+          <p className="text-lg text-finder-primary underline" > {chambres.length} chambres disponibles</p>
+        )}
+        <ListeChambres chambres={chambres} onChoix={setSelection} /> 
+        {selection && (
+          <div>
+            <FicheChambre chambre={selection} hotel={hotel} />
+            <button className="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold" onClick={() => setSelection(null)}>Fermer</button> 
+          </div>
+        )} 
+        
+      </div>
     </div>
   );
 }
