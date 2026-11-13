@@ -13,7 +13,7 @@
 @layer base {
   /* Style global de la page entière */
   body {
-    background-color: #A5E1FA; /* Gris très clair pour le fond de l'app */
+    background-color: hsl(195, 22%, 96%); /* Gris très clair pour le fond de l'app */
     color: black;
   }
   

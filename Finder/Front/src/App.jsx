@@ -1,4 +1,5 @@
 import FicheHotel from './composants/FicheHotel';
+import Recherche from './pages/recherche';
 import FicheChambre from './composants/FicheChambre';
 import ListeChambres from './composants/ListeChambres';
 import { useState } from 'react'; 
@@ -31,8 +32,8 @@ export default function App() {
   const [selection, setSelection] = useState(null); 
   const [chambres] = useState(listeChambres); 
   return (
-    <div>
-      <center>
+    <div className="flex flex-col items-center">
+      <Recherche />
       <h1 className="text-6xl font-bold text-finder-primary">Finder</h1>
       {chambres.length > 0 && (
 
@@ -45,7 +46,6 @@ export default function App() {
           <button className="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold" onClick={() => setSelection(null)}>Fermer</button> 
         </div>
       )} 
-    </center>
     </div>
   );
 }
