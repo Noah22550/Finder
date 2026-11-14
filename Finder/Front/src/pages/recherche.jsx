@@ -1,8 +1,32 @@
-import { useState } from 'react';
 import './recherche.css';
+import ListeChambres from '../composants/ListeChambres';
+import { useEffect, useState } from 'react';
+import { API } from '../config';
+
 
 export default function Recherche() {
   const [criteres, setCriteres] = useState({ hotel: '', date_debut: '', date_fin: '', capacite: '', prix_max: '', categorie: '' });
+  const [chambres, setChambres] = useState([]);
+  const [valides, setValides] = useState({});
+  const [version, setVersion] = useState(0);
+  useEffect(() => {
+  let annule = false;
+  const params = new URLSearchParams();
+  for (const [cle, valeur] of Object.entries(valides)) {
+    if (valeur !== '') params.set(cle, valeur);
+  }
+  const query = params.toString();
+  fetch(`${API}/chambres${query ? '?' + query : ''}`).then(r => r.json())
+  .then(data => { if (!annule) setChambres(data); })
+  return () => { annule = true; };
+}, 
+[valides, version]);
+
+function rechercher(e) {
+  e.preventDefault();
+  setValides(criteres);
+  setVersion(v => v + 1);
+}
 
   function changer(e) {
     setCriteres({ ...criteres, [e.target.name]: e.target.value });
@@ -11,7 +35,7 @@ export default function Recherche() {
   return (
     <div className="formulaire-recherche">
       <h3>Rechercher une chambre</h3>
-      <form onSubmit={e => { e.preventDefault(); /* question 2 */ }}>
+      <form onSubmit={rechercher}>
         <div className="grille-champs">
           <div className="champ-groupe">
             <label>Hôtel</label>

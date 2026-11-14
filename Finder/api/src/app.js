@@ -2,6 +2,7 @@ import express from 'express';
 import prisma from './prisma.js';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import cors from 'cors';
 
 import chambresRoutes from './routes/chambres.js';
 import hotelsRoutes from './routes/hotel.js';
@@ -9,7 +10,7 @@ import reservationsRoutes from './routes/reservations.js';
 import authRoutes from './routes/auth.js';
 import voyageursRoutes from './routes/voyageur.js';
 const app = express();
-
+app.use(cors({ origin: ['http://localhost:5173'] }));
 app.use(express.json());
 app.use('/chambres', chambresRoutes);
 app.use('/hotels', hotelsRoutes);
