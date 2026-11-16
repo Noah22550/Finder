@@ -1,10 +1,10 @@
-export default function FicheHotel({ Hotel }) {
+export default function FicheHotel({ hotel }) {
   return (
     <article>
-      <h2>{Hotel.nom}</h2>
-      <p>{Hotel.adresse}</p>
-      <p>{Hotel.codePostal} {Hotel.ville}</p>
-      <p>{Hotel.description}</p>
+      <h2>{hotel.nom}</h2>
+      <p>{hotel.adresse}</p>
+      <p>{hotel.codePostal} {hotel.ville}</p>
+      <p>{hotel.description}</p>
     </article>
   );
 }

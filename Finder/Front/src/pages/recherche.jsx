@@ -1,6 +1,7 @@
 import './recherche.css';
 import ListeChambres from '../composants/ListeChambres';
 import FicheHotel from '../composants/FicheHotel';
+import FicheChambre from '../composants/FicheChambre';
 import { useEffect, useState } from 'react';
 import { API } from '../config';
 
@@ -12,6 +13,7 @@ export default function Recherche() {
   const [version, setVersion] = useState(0);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
+  const [selection, setSelection] = useState(null);
 
   // Fonction indispensable pour que tes inputs fonctionnent
   function changer(e) {
@@ -58,6 +60,7 @@ export default function Recherche() {
   function rechercher(e) {
     e.preventDefault();
     setChargement(true);
+    setSelection(null);
     setErreur(null);
     setValides(criteres);
     setVersion(v => v + 1);
@@ -104,8 +107,14 @@ export default function Recherche() {
       {chargement && <p>Chargement...</p>}
       {erreur && <p role="alert">{erreur}</p>}
       {!chargement && !erreur && hotel && <FicheHotel hotel={hotel}/>}
-      {!chargement && !erreur && <ListeChambres chambres={chambres} />}
-      
+      {chambres.length > 0 && <p>{chambres.length} chambres</p>}
+      {!chargement && !erreur && <ListeChambres chambres={chambres} onChoix={setSelection} />}
+      {selection && (
+        <div>
+          <FicheChambre chambre={selection} hotel={hotel} />
+          <button className="bg-blue-500 text-white px-4 py-2 rounded-lg font-bold" onClick={() => setSelection(null)}>Fermer</button> 
+        </div>
+      )}
     </div>
   );
 }
