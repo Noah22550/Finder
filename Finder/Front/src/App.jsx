@@ -1,4 +1,4 @@
-import FicheHotel from './composants/FicheHotel';
+
 import Recherche from './pages/recherche';
 import FicheChambre from './composants/FicheChambre';
 import ListeChambres from './composants/ListeChambres';

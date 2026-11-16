@@ -1,35 +1,66 @@
 import './recherche.css';
 import ListeChambres from '../composants/ListeChambres';
+import FicheHotel from '../composants/FicheHotel';
 import { useEffect, useState } from 'react';
 import { API } from '../config';
-
 
 export default function Recherche() {
   const [criteres, setCriteres] = useState({ hotel: '', date_debut: '', date_fin: '', capacite: '', prix_max: '', categorie: '' });
   const [chambres, setChambres] = useState([]);
+  const [hotel, setHotel] = useState(null);
   const [valides, setValides] = useState({});
   const [version, setVersion] = useState(0);
-  useEffect(() => {
-  let annule = false;
-  const params = new URLSearchParams();
-  for (const [cle, valeur] of Object.entries(valides)) {
-    if (valeur !== '') params.set(cle, valeur);
-  }
-  const query = params.toString();
-  fetch(`${API}/chambres${query ? '?' + query : ''}`).then(r => r.json())
-  .then(data => { if (!annule) setChambres(data); })
-  return () => { annule = true; };
-}, 
-[valides, version]);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState(null);
 
-function rechercher(e) {
-  e.preventDefault();
-  setValides(criteres);
-  setVersion(v => v + 1);
-}
-
+  // Fonction indispensable pour que tes inputs fonctionnent
   function changer(e) {
     setCriteres({ ...criteres, [e.target.name]: e.target.value });
+  }
+
+  useEffect(() => {
+    let annule = false;
+
+    // Construction de q comme à la question 2
+    const params = new URLSearchParams();
+    for (const [cle, valeur] of Object.entries(valides)) {
+      if (valeur !== '') params.set(cle, valeur);
+    }
+    const q = params.toString();
+
+    // Appel 
+    fetch(`${API}/chambres${q ? '?' + q : ''}`)
+      .then(r => {if (!r.ok) throw new Error(`HTTP ${r.status}`);return r.json();})
+      .then(data => { if (!annule) setChambres(data); })
+      .catch(() => { 
+        if (!annule) setErreur('Service indisponible, réessayez plus tard.'); 
+      })
+      .finally(() => { 
+        if (!annule) setChargement(false); 
+      });
+
+   if (valides.hotel){
+      fetch(`${API}/hotels/${valides.hotel}`)
+      .then(request => {if (!request.ok) throw new Error(`HTTP ${request.status}`);return request.json();})
+      .then(data => {if (!annule) setHotel(data); } )
+      .catch(() => { 
+        if (!annule) setErreur('Service indisponible, réessayez plus tard.'); 
+      })
+      .finally(() => { 
+        if (!annule) setChargement(false); 
+      });
+    } else {
+      setHotel(null); // On efface la fiche si aucun hôtel n'est cherché
+    }
+  return () => { annule = true; };
+  }, [valides, version]);
+
+  function rechercher(e) {
+    e.preventDefault();
+    setChargement(true);
+    setErreur(null);
+    setValides(criteres);
+    setVersion(v => v + 1);
   }
 
   return (
@@ -70,6 +101,11 @@ function rechercher(e) {
         </div>
         <button type="submit" className="bouton-rechercher">Rechercher</button>
       </form>
+      {chargement && <p>Chargement...</p>}
+      {erreur && <p role="alert">{erreur}</p>}
+      {!chargement && !erreur && hotel && <FicheHotel hotel={hotel}/>}
+      {!chargement && !erreur && <ListeChambres chambres={chambres} />}
+      
     </div>
   );
 }
