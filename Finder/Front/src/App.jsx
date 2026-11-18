@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 export default function App() {
   return (
     <div>
+      <button type="submit">Déconnexion</button>
       <BrowserRouter>
       <div className="flex flex-col items-center">
         <h1 className="text-6xl font-bold text-finder-primary">Finder</h1>
