@@ -4,6 +4,7 @@ import Connexion from './pages/connexion';
 import Reserver from './pages/reserver'
 import Mesreservations from './pages/mes-reservations'
 import Accueil from './pages/accueil'
+import RouteProtegee from './RouteProtegee';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <nav className="bg-white border-b border-gray-200 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16 items-center">
+              <Link to="/accueil"> Accueil</Link>
               <Link to="/recherche">Rechercher</Link>
               <Link to="/inscription">s'inscrire</Link>
               <Link to="/connexion">Connexion</Link>
@@ -28,7 +30,7 @@ export default function App() {
           <Route path="/inscription" element={<Inscription />} />
           <Route path="/connexion" element={<Connexion />} />
           <Route path="/reserver" element={<Reserver />} />
-          <Route path="/mes-reservations" element={<Mesreservations />} />
+          <Route path="/mes-reservations" element={<RouteProtegee><Mesreservations/></RouteProtegee>} />
           <Route path="*" element={<Accueil />} />
         </Routes>
       </BrowserRouter>
