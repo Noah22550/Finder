@@ -54,8 +54,9 @@ export default function Recherche() {
     } else {
       setHotel(null); // On efface la fiche si aucun hôtel n'est cherché
     }
-  return () => { annule = true; };
-  }, [valides, version]);
+    return () => { annule = true; };
+  }, 
+  [valides, version]);
 
   function rechercher(e) {
     e.preventDefault();
