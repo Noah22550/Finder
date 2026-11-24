@@ -2,6 +2,7 @@ import './recherche.css';
 import ListeChambres from '../composants/ListeChambres';
 import FicheHotel from '../composants/FicheHotel';
 import FicheChambre from '../composants/FicheChambre';
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { API } from '../config';
 
@@ -121,12 +122,21 @@ const INPUT = 'w-full mt-1 px-3 py-2 border border-gray-300 rounded-lg text-sm b
 
       {selection && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setSelection(null)}>
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>{/* stopPropagation() pose une barrière sur la carte blanche pour dire au navigateur : « Ce clic s'arrête ici, ne préviens pas le fond noir derrière. » */}
             <FicheChambre chambre={selection} hotel={hotel} />
-            <div className="mt-6 flex justify-end">
-              <button onClick={() => setSelection(null)} className="bg-sky-700 hover:bg-sky-800 text-white text-sm font-semibold px-4 py-2 rounded-lg cursor-pointer">
+           <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setSelection(null)}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-4 py-2 rounded-lg cursor-pointer"
+              >
                 Fermer
               </button>
+              <Link
+                to={`/reserver/${selection.id}`}
+                className="bg-sky-700 hover:bg-sky-800 text-white text-sm font-semibold px-4 py-2 rounded-lg"
+              >
+                Réserver
+              </Link>
             </div>
           </div>
         </div>

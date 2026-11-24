@@ -26,7 +26,6 @@ export default function App() {
               <Link to="/accueil">Accueil</Link>
               <Link to="/recherche">Rechercher</Link>
               <Link to="/inscription">S'inscrire</Link>
-              <Link to="/reserver">Réserver</Link>
               <Link to="/mes-reservations">Voir mes réservations</Link>
 
               {connecte ? (
@@ -48,7 +47,7 @@ export default function App() {
             element={<Connexion onConnexion={() => setConnecte(true)} />}
           />
           <Route
-            path="/reserver"
+            path="/reserver/:id"
             element={<RouteProtegee><Reserver /></RouteProtegee>}
           />
           <Route
