@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { API } from '../config';
 import { setJeton } from '../auth';
 
-export default function Connexion() {
+export default function Connexion({ onConnexion }) {
   const [email, setEmail] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
   const [erreur, setErreur] = useState(null);
@@ -25,9 +25,10 @@ export default function Connexion() {
         throw new Error('Identifiants invalides');
       }
 
-      const { token } = await reponse.json();
-      setJeton(token);
-      navigate('/recherche'); // Redirection vers la recherche en cas de succès
+    const { token } = await reponse.json();
+    setJeton(token);
+    onConnexion();
+    navigate('/recherche');
       
     } catch {
       setErreur('Email ou mot de passe incorrect.');
