@@ -60,6 +60,7 @@ export default function Mesreservations() {
         <p className="text-gray-500 bg-white p-6 rounded-xl border border-gray-200 text-center shadow-sm">
           Vous n'avez effectuée aucune réservation pour le moment.
         </p>
+        
       )}
 
       {!chargement && reservations.length > 0 && (
@@ -81,9 +82,11 @@ export default function Mesreservations() {
                   {resa.statut || 'Confirmée'}
                 </span>
               </div>
-              <button type="button" onClick={() => annuler(resa.id)} className="bg-sky-700 hover:bg-sky-800 text-white font-semibold px-6 py-2.5 rounded-lg transition cursor-pointer">
-                Annuler
-              </button>
+              {(resa.statut === 'en_attente' || resa.statut === 'confirmee') && (
+                <button type="button" onClick={() => annuler(resa.id)} className="bg-sky-700 hover:bg-sky-800 text-white font-semibold px-6 py-2.5 rounded-lg transition cursor-pointer">
+                  Annuler
+                </button>
+              )}
             </div>
           ))}
         </div>
